@@ -127,15 +127,15 @@ func (c *PictureController) DetectImageFromDropboxUrl() func(http.ResponseWriter
         err = unzip(src, dest)
 
         if err != nil {
-            fmt.Println(os.RemoveAll("./test.zip"))
-            fmt.Println(RemoveContents("test"))
+            //fmt.Println(os.RemoveAll("./test.zip"))
+            //fmt.Println(RemoveContents("test"))
             log.Println(err)
             http.Error(w, err.Error(), http.StatusBadRequest)
             return
         }
         c.detectImage(w, dest, eventId)
-        fmt.Println(os.RemoveAll("./test.zip"))
-        fmt.Println(RemoveContents("test"))
+        //fmt.Println(os.RemoveAll("./test.zip"))
+        //fmt.Println(RemoveContents("test"))
         end := time.Now()
         fmt.Println("\n\n\n\n\n\n\n\n\n\n\nSeconds:")
         fmt.Println(end.Sub(start).Seconds())

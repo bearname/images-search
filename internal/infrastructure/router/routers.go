@@ -23,7 +23,7 @@ func Router(pictureController *transport.PictureController, eventsController *tr
 
     apiV1Route.HandleFunc("/picture/search", pictureController.SearchPictures()).Methods(http.MethodGet, http.MethodOptions)
     //apiV1Route.HandleFunc("/picture/detectText", pictureController.DetectImageFromArchive()).Methods(http.MethodPost, http.MethodOptions)
-    apiV1Route.HandleFunc("/picture/detectText/dropbox", pictureController.DetectImageFromDropboxUrl()).Methods(http.MethodPost, http.MethodOptions)
+    apiV1Route.HandleFunc("/picture/detectText/dropbox", authController.CheckTokenHandler(pictureController.DetectImageFromDropboxUrl())).Methods(http.MethodPost, http.MethodOptions)
     apiV1Route.HandleFunc("/picture/{id}", authController.CheckTokenHandler(pictureController.DeletePicture())).Methods(http.MethodDelete, http.MethodOptions)
 
     apiV1Route.HandleFunc("/auth/login", authController.Login).Methods(http.MethodPost, http.MethodOptions)
