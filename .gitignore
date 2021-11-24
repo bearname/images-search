@@ -17,6 +17,5 @@ html/
 web1
 web2
 web/images/
-*.exe
 test.html
 test_resized.jpg
