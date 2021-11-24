@@ -12,8 +12,8 @@ func MakeSet() *customSet {
 }
 
 type customSet struct {
-	container map[string] float64
-	keys []string
+	container map[string]float64
+	keys      []string
 }
 
 func (c *customSet) GetAll() map[string]float64 {
@@ -31,7 +31,7 @@ func (c *customSet) Exists(key string) bool {
 
 func (c *customSet) Get(key string) (float64, error) {
 	if !c.Exists(key) {
-		return  0, errors.New("key not exist")
+		return 0, errors.New("key not exist")
 	}
 	return c.container[key], nil
 }
@@ -57,4 +57,3 @@ func (c *customSet) Remove(key string) error {
 func (c *customSet) Size() int {
 	return len(c.container)
 }
-

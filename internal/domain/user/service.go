@@ -1,5 +1,5 @@
 package user
 
 type Service interface {
-    Find(usernameOrId string) (FindUserDto, error)
+	Find(usernameOrId string) (FindUserDto, error)
 }

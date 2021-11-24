@@ -4,7 +4,7 @@ const ValueNotSetted = 99999999
 
 type TextDetection struct {
 	DetectedText string
-	Confidence float64
+	Confidence   float64
 }
 
 func NewTextDetection(detectedText string, confidence float64) *TextDetection {

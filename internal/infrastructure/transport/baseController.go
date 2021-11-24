@@ -15,7 +15,6 @@ var (
 type BaseController struct {
 }
 
-
 func (c *BaseController) WriteError(w http.ResponseWriter, err error, responseError Error) {
 	log.Error(err.Error())
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -56,30 +55,30 @@ func (c *BaseController) translateError(err error) transportError {
 				Message: err.Error(),
 			},
 		}
-	//} else if errors.Is(err, app.ErrUrlNotFound) {
-	//	return transportError{
-	//		Status: http.StatusNotFound,
-	//		Response: responseWithoutData{
-	//			Code:    102,
-	//			Message: err.Error(),
-	//		},
-	//	}
-	//} else if errors.Is(err, app.ErrDuplicateUrl) {
-	//	return transportError{
-	//		Status: http.StatusConflict,
-	//		Response: responseWithoutData{
-	//			Code:    103,
-	//			Message: err.Error(),
-	//		},
-	//	}
-	//} else if errors.Is(err, app.ErrInvalidUrl) {
-	//	return transportError{
-	//		Status: http.StatusBadRequest,
-	//		Response: responseWithoutData{
-	//			Code:    104,
-	//			Message: err.Error(),
-	//		},
-	//	}
+		//} else if errors.Is(err, app.ErrUrlNotFound) {
+		//	return transportError{
+		//		Status: http.StatusNotFound,
+		//		Response: responseWithoutData{
+		//			Code:    102,
+		//			Message: err.Error(),
+		//		},
+		//	}
+		//} else if errors.Is(err, app.ErrDuplicateUrl) {
+		//	return transportError{
+		//		Status: http.StatusConflict,
+		//		Response: responseWithoutData{
+		//			Code:    103,
+		//			Message: err.Error(),
+		//		},
+		//	}
+		//} else if errors.Is(err, app.ErrInvalidUrl) {
+		//	return transportError{
+		//		Status: http.StatusBadRequest,
+		//		Response: responseWithoutData{
+		//			Code:    104,
+		//			Message: err.Error(),
+		//		},
+		//	}
 	}
 
 	return transportError{

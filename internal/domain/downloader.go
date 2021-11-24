@@ -1,5 +1,5 @@
 package domain
 
 type Downloader interface {
-    Download(url string) error
+	Download(url string) error
 }

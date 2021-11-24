@@ -1,4 +1,4 @@
-module github.com/bearname/photofinish
+module photofinish
 // +heroku goVersion go1.16
 go 1.16
 

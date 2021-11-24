@@ -1,42 +1,42 @@
 package picture
 
 import (
-    "archive/zip"
-    "aws_rekognition_demo/internal/common/uuid"
-    "aws_rekognition_demo/internal/domain"
-    "aws_rekognition_demo/internal/domain/picture"
-    "bytes"
-    "encoding/base64"
-    "encoding/json"
-    "fmt"
-    "github.com/aws/aws-sdk-go-v2/service/s3/types"
-    "github.com/aws/aws-sdk-go/service/rekognition"
-    log "github.com/sirupsen/logrus"
-    "io/ioutil"
-    "os"
-    "path/filepath"
-    "regexp"
-    "strconv"
+	"archive/zip"
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/aws/aws-sdk-go/service/rekognition"
+	log "github.com/sirupsen/logrus"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"photofinish/internal/common/uuid"
+	"photofinish/internal/domain"
+	"photofinish/internal/domain/picture"
+	"regexp"
+	"strconv"
 )
 
 type ServiceImpl struct {
-    pictureRepo    picture.Repository
-    awsRekognition *rekognition.Rekognition
-    //awsBucket      string
-    //uploader       *manager.Uploader
-    uploader   domain.Uploader
-    compressor domain.ImageCompressor
+	pictureRepo    picture.Repository
+	awsRekognition *rekognition.Rekognition
+	//awsBucket      string
+	//uploader       *manager.Uploader
+	uploader   domain.Uploader
+	compressor domain.ImageCompressor
 }
 
 func NewPictureService(pictureRepo picture.Repository, awsRekognition *rekognition.Rekognition, uploader domain.Uploader, compressor domain.ImageCompressor) *ServiceImpl {
-    s := new(ServiceImpl)
-    s.pictureRepo = pictureRepo
-    s.awsRekognition = awsRekognition
-    s.uploader = uploader
-    s.compressor = compressor
-    //s.awsBucket = awsBucket
-    //s.uploader = uploader
-    return s
+	s := new(ServiceImpl)
+	s.pictureRepo = pictureRepo
+	s.awsRekognition = awsRekognition
+	s.uploader = uploader
+	s.compressor = compressor
+	//s.awsBucket = awsBucket
+	//s.uploader = uploader
+	return s
 }
 
 //func (s *ServiceImpl) upload(filename string, file io.Reader, acl types.ObjectCannedACL) (*manager.UploadOutput, error) {
@@ -53,7 +53,7 @@ func NewPictureService(pictureRepo picture.Repository, awsRekognition *rekogniti
 //}
 
 func (s *ServiceImpl) Create(imageTextDetectionDto *picture.TextDetectionOnImageDto) error {
-    return (s.pictureRepo).Store(imageTextDetectionDto)
+	return (s.pictureRepo).Store(imageTextDetectionDto)
 }
 
 const MOCK_DATA = `{
@@ -616,263 +616,263 @@ const MOCK_DATA = `{
 }`
 
 func (s *ServiceImpl) DetectImageFromArchive(root string, minConfidence int, eventId int64) error {
-    var pictures []*picture.TextDetectionOnImageDto
-    err := filepath.Walk(root,
-        func(path string, info os.FileInfo, err error) error {
-            if err != nil {
-                return err
-            }
-            fmt.Println(path, info.Size())
-            if !info.IsDir() {
-                textDetection, err := s.textTextOnImageFile(eventId, path, minConfidence)
-                if err != nil {
-                    log.Println(err.Error())
-                    return err
-                }
+	var pictures []*picture.TextDetectionOnImageDto
+	err := filepath.Walk(root,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			fmt.Println(path, info.Size())
+			if !info.IsDir() {
+				textDetection, err := s.textTextOnImageFile(eventId, path, minConfidence)
+				if err != nil {
+					log.Println(err.Error())
+					return err
+				}
 
-                pictures = append(pictures, textDetection)
-                if len(pictures) > 400 {
-                    err = s.storeAllImages(pictures)
-                    if err != nil {
-                        return err
-                    }
-                }
-            }
-            return nil
-        })
-    if err != nil {
-        log.Println(err)
-    }
+				pictures = append(pictures, textDetection)
+				if len(pictures) > 400 {
+					err = s.storeAllImages(pictures)
+					if err != nil {
+						return err
+					}
+				}
+			}
+			return nil
+		})
+	if err != nil {
+		log.Println(err)
+	}
 
-    //for _, file := range files {
-    //    fmt.Printf("=%s\n", file.Name)
-    //    if !file.FileInfo().IsDir() {
-    //
-    //        textDetection, err := s.textTextOnImageFile(eventId, file, minConfidence)
-    //        if err != nil {
-    //            log.Println(err.Error())
-    //            return err
-    //        }
-    //
-    //        pictures = append(pictures, textDetection)
-    //        if len(pictures) > 400 {
-    //            err = s.storeAllImages(pictures)
-    //            if err != nil {
-    //                return err
-    //            }
-    //        }
-    //    }
-    //}
+	//for _, file := range files {
+	//    fmt.Printf("=%s\n", file.Name)
+	//    if !file.FileInfo().IsDir() {
+	//
+	//        textDetection, err := s.textTextOnImageFile(eventId, file, minConfidence)
+	//        if err != nil {
+	//            log.Println(err.Error())
+	//            return err
+	//        }
+	//
+	//        pictures = append(pictures, textDetection)
+	//        if len(pictures) > 400 {
+	//            err = s.storeAllImages(pictures)
+	//            if err != nil {
+	//                return err
+	//            }
+	//        }
+	//    }
+	//}
 
-    if len(pictures) > 0 {
-        err := s.storeAllImages(pictures)
-        if err != nil {
-            return err
-        }
-    }
-    pictures = nil
+	if len(pictures) > 0 {
+		err := s.storeAllImages(pictures)
+		if err != nil {
+			return err
+		}
+	}
+	pictures = nil
 
-    return nil
+	return nil
 }
 
 func (s *ServiceImpl) storeAllImages(pictures []*picture.TextDetectionOnImageDto) error {
-    err := (s.pictureRepo).StoreAll(pictures)
-    if err != nil {
-        log.Println(err.Error())
-        return err
-    } else {
-        pictures = []*picture.TextDetectionOnImageDto{}
-    }
-    return nil
+	err := (s.pictureRepo).StoreAll(pictures)
+	if err != nil {
+		log.Println(err.Error())
+		return err
+	} else {
+		pictures = []*picture.TextDetectionOnImageDto{}
+	}
+	return nil
 }
 
 func (s *ServiceImpl) Search(dto picture.SearchPictureDto) (picture.SearchPictureResultDto, error) {
-    return (s.pictureRepo).Search(dto)
+	return (s.pictureRepo).Search(dto)
 }
 
 func (s *ServiceImpl) Delete(pictureId string) error {
-    err := s.pictureRepo.FindById(pictureId)
-    if err != nil {
-        log.Error(err)
-        return err
-    }
-    return (s.pictureRepo).Delete(pictureId)
+	err := s.pictureRepo.FindById(pictureId)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	return (s.pictureRepo).Delete(pictureId)
 }
 
 func (s *ServiceImpl) textTextOnImageFile(eventId int64, path string, minConfidence int) (*picture.TextDetectionOnImageDto, error) {
-    //fileBytes, err := readAll(path)
-    //if err != nil {
-    //    return nil, err
-    //}
-    fileBytes, err := ioutil.ReadFile(path)
-    if err != nil {
-        return nil, err
-    }
-    filename := uuid.Generate().String()
-    originalImageUploadOutput, err := s.uploader.Upload(strconv.FormatInt(eventId, 10)+ "/" + filename+".jpg", bytes.NewReader(fileBytes), types.ObjectCannedACLBucketOwnerRead)
-    if err != nil {
-       log.Error(err)
-       return nil, err
-    }
+	//fileBytes, err := readAll(path)
+	//if err != nil {
+	//    return nil, err
+	//}
+	fileBytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	filename := uuid.Generate().String()
+	originalImageUploadOutput, err := s.uploader.Upload(strconv.FormatInt(eventId, 10)+"/"+filename+".jpg", bytes.NewReader(fileBytes), types.ObjectCannedACLBucketOwnerRead)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
 
-    compressBuffer, ok := s.compressor.Compress(fileBytes, 100, 300, "jpg")
+	compressBuffer, ok := s.compressor.Compress(fileBytes, 100, 300, "jpg")
 
-    var thumbnailImage *domain.UploadOutput
-    if ok {
-        //all, err := ioutil.ReadAll(&compressBuffer)
-        //if err != nil {
-        //    log.Error(err)
-        //    return nil, err
-        //}
+	var thumbnailImage *domain.UploadOutput
+	if ok {
+		//all, err := ioutil.ReadAll(&compressBuffer)
+		//if err != nil {
+		//    log.Error(err)
+		//    return nil, err
+		//}
 
-        //filename = "web/images/" + filename + "-thumb.jpg"
-        //fmt.Print("filename")
-        //fmt.Println(filename)
-        //err = writeFile(filename, all)
-        //if err != nil {
-        //    log.Error(err)
-        //}
-        thumbnailImage, err = s.uploader.Upload(strconv.FormatInt(eventId, 10)+ "/" + filename+"-thumb.jpg", &compressBuffer, types.ObjectCannedACLPublicRead)
-        if err != nil {
-           log.Error(err)
-           return nil, err
-        }
-    }
+		//filename = "web/images/" + filename + "-thumb.jpg"
+		//fmt.Print("filename")
+		//fmt.Println(filename)
+		//err = writeFile(filename, all)
+		//if err != nil {
+		//    log.Error(err)
+		//}
+		thumbnailImage, err = s.uploader.Upload(strconv.FormatInt(eventId, 10)+"/"+filename+"-thumb.jpg", &compressBuffer, types.ObjectCannedACLPublicRead)
+		if err != nil {
+			log.Error(err)
+			return nil, err
+		}
+	}
 
-    var decodedImage []byte
-    decodedImage, err = imageBase64(fileBytes)
+	var decodedImage []byte
+	decodedImage, err = imageBase64(fileBytes)
 
-    if err != nil {
-        log.Println("decodestring")
-        log.Println(err.Error())
-        return nil, err
-    }
-    var textDetection []picture.TextDetection
+	if err != nil {
+		log.Println("decodestring")
+		log.Println(err.Error())
+		return nil, err
+	}
+	var textDetection []picture.TextDetection
 
-    textDetection, err = s.detectText(decodedImage, minConfidence)
-    if err != nil {
-        log.Println("detect")
-        log.Println(err.Error())
-        return nil, err
-    }
-    decodedImage = nil
+	textDetection, err = s.detectText(decodedImage, minConfidence)
+	if err != nil {
+		log.Println("detect")
+		log.Println(err.Error())
+		return nil, err
+	}
+	decodedImage = nil
 
-    log.Println(textDetection)
+	log.Println(textDetection)
 
-    return picture.NewImageTextDetectionDto(eventId, originalImageUploadOutput.Location, thumbnailImage.Location, textDetection), nil
-    //return picture.NewImageTextDetectionDto(eventId, "originalImageUploadOutput.Location", " thumbnailImage.Location", textDetection), nil
+	return picture.NewImageTextDetectionDto(eventId, originalImageUploadOutput.Location, thumbnailImage.Location, textDetection), nil
+	//return picture.NewImageTextDetectionDto(eventId, "originalImageUploadOutput.Location", " thumbnailImage.Location", textDetection), nil
 }
 
 func readAll(file *zip.File) ([]byte, error) {
-    fc, err := file.Open()
-    if err != nil {
-        return nil, err
-    }
-    defer closeFile(fc)
+	fc, err := file.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer closeFile(fc)
 
-    content, err := ioutil.ReadAll(fc)
-    if err != nil {
-        return nil, err
-    }
+	content, err := ioutil.ReadAll(fc)
+	if err != nil {
+		return nil, err
+	}
 
-    return content, nil
+	return content, nil
 }
 
 type myCloser interface {
-    Close() error
+	Close() error
 }
 
 func closeFile(f myCloser) {
-    err := f.Close()
-    if err != nil {
-        log.Error(err)
-    }
+	err := f.Close()
+	if err != nil {
+		log.Error(err)
+	}
 }
 
 func writeFile(filename string, bytes []byte) error {
-    err := ioutil.WriteFile(filename, bytes, 0644)
-    if err != nil {
-        return err
-    }
+	err := ioutil.WriteFile(filename, bytes, 0644)
+	if err != nil {
+		return err
+	}
 
-    return err
+	return err
 }
 
 func imageBase64(buf []byte) ([]byte, error) {
-    imgBase64Str := base64.StdEncoding.EncodeToString(buf)
-    decodedImage, err := base64.StdEncoding.DecodeString(imgBase64Str)
-    return decodedImage, err
+	imgBase64Str := base64.StdEncoding.EncodeToString(buf)
+	decodedImage, err := base64.StdEncoding.DecodeString(imgBase64Str)
+	return decodedImage, err
 }
 
 func (s *ServiceImpl) detectText(decodedImage []byte, minConfidence int) ([]picture.TextDetection, error) {
-    input := &rekognition.DetectTextInput{
-       Image: &rekognition.Image{
-           Bytes: decodedImage,
-       },
-       //Image: &rekognition.Image{
-       //	S3Object: &rekognition.S3Object{
-       //		Bucket: bucket,
-       //		Name:   photo,
-       //	},
-       //},
-    }
+	input := &rekognition.DetectTextInput{
+		Image: &rekognition.Image{
+			Bytes: decodedImage,
+		},
+		//Image: &rekognition.Image{
+		//	S3Object: &rekognition.S3Object{
+		//		Bucket: bucket,
+		//		Name:   photo,
+		//	},
+		//},
+	}
 
-    //var result rekognition.DetectTextOutput
-    //err := json.Unmarshal([]byte(MOCK_DATA), &result)
-    result, err := s.awsRekognition.DetectText(input)
-    if err != nil {
-        log.Println(err.Error())
-        return nil, err
-    }
-    log.Println(result.GoString())
+	//var result rekognition.DetectTextOutput
+	//err := json.Unmarshal([]byte(MOCK_DATA), &result)
+	result, err := s.awsRekognition.DetectText(input)
+	if err != nil {
+		log.Println(err.Error())
+		return nil, err
+	}
+	log.Println(result.GoString())
 
-    set := domain.MakeSet()
-    for _, detection := range result.TextDetections {
-        //log.Println("===")
-        //log.Println("'int(*detection.Confidence*100)'")
-        if int(*detection.Confidence) >= minConfidence {
-            detectedText := *detection.DetectedText
-            //log.Println(detectedText)
-            numbers := extractNumberFromString(detectedText)
-            for _, number := range numbers {
-                set.Add(number, *detection.Confidence)
-            }
-        }
-    }
+	set := domain.MakeSet()
+	for _, detection := range result.TextDetections {
+		//log.Println("===")
+		//log.Println("'int(*detection.Confidence*100)'")
+		if int(*detection.Confidence) >= minConfidence {
+			detectedText := *detection.DetectedText
+			//log.Println(detectedText)
+			numbers := extractNumberFromString(detectedText)
+			for _, number := range numbers {
+				set.Add(number, *detection.Confidence)
+			}
+		}
+	}
 
-    log.Println("set.GetKeys()")
-    var arr []picture.TextDetection
+	log.Println("set.GetKeys()")
+	var arr []picture.TextDetection
 
-    for detectedText, confidence := range set.GetAll() {
-        fmt.Printf("%s %f\n", detectedText, confidence)
-        detection := picture.NewTextDetection(detectedText, confidence)
-        arr = append(arr, *detection)
-    }
+	for detectedText, confidence := range set.GetAll() {
+		fmt.Printf("%s %f\n", detectedText, confidence)
+		detection := picture.NewTextDetection(detectedText, confidence)
+		arr = append(arr, *detection)
+	}
 
-    log.Println(set.GetKeys())
+	log.Println(set.GetKeys())
 
-    output, err := json.Marshal(result)
-    if err != nil {
-        log.Println(err.Error())
-        return nil, err
-    }
+	output, err := json.Marshal(result)
+	if err != nil {
+		log.Println(err.Error())
+		return nil, err
+	}
 
-    log.Println(string(output))
-    return arr, nil
+	log.Println(string(output))
+	return arr, nil
 }
 
 func extractNumberFromString(input string) []string {
-    re := regexp.MustCompile(`[-]?\d[\d,]*[\.]?[\d{2}]*`)
+	re := regexp.MustCompile(`[-]?\d[\d,]*[\.]?[\d{2}]*`)
 
-    //fmt.Printf("Pattern: %v\n", re.String()) // Print Pattern
-    //
-    //fmt.Printf("String contains any match: %v\n", re.MatchString(input)) // True
+	//fmt.Printf("Pattern: %v\n", re.String()) // Print Pattern
+	//
+	//fmt.Printf("String contains any match: %v\n", re.MatchString(input)) // True
 
-    submatchall := re.FindAllString(input, -1)
-    var result []string
-    for _, element := range submatchall {
-        result = append(result, element)
-        //log.Println(element)
-    }
-    return result
+	submatchall := re.FindAllString(input, -1)
+	var result []string
+	for _, element := range submatchall {
+		result = append(result, element)
+		//log.Println(element)
+	}
+	return result
 }
