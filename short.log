@@ -1,0 +1,4 @@
+{"level":"info","msg":"error undefined environment variable SERVE_REST_ADDRESS","time":"2021-10-31T22:54:40+03:00"}
+{"level":"fatal","msg":"Default settingsundefined environment variable SERVE_REST_ADDRESS","time":"2021-10-31T22:54:40+03:00"}
+{"level":"info","msg":"error undefined environment variable SERVE_REST_ADDRESS","time":"2021-10-31T22:56:17+03:00"}
+{"level":"fatal","msg":"Default settingsundefined environment variable SERVE_REST_ADDRESS","time":"2021-10-31T22:56:17+03:00"}

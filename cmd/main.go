@@ -100,8 +100,8 @@ func main() {
         //accessToken = "Hoih4cfQJFsAAAAAAAAAAUXzsZDZ2k8o74P9PhFED1VwJAGYZT_qQIQIBa7zFlsq"
     }
     downloader := dropbox.NewSDKDownloader(accessToken)
-
-    handler := initHandlers(pool, conf.AwsS3Bucket, uploader, downloader)
+    awsS3Uploader := s32.NewAwsS3Uploader(uploader, conf.AwsS3Bucket)
+    handler := initHandlers(pool, awsS3Uploader, downloader)
 
     srv := httpServer.StartServer(getenv, handler)
     httpServer.WaitForKillSignal(killSignalChan)
@@ -112,11 +112,10 @@ func main() {
     }
 }
 
-func initHandlers(connPool *pgx.ConnPool, awsS3Bucket string, awsUploaderManager *manager.Uploader, downloader domain.Downloader) http.Handler {
+func initHandlers(connPool *pgx.ConnPool, awsUploaderManager domain.Uploader, downloader domain.Downloader) http.Handler {
     pictureRepos := postgres.NewPictureRepository(connPool)
-    awsS3Uploader := s32.NewAwsS3Uploader(awsUploaderManager, awsS3Bucket)
     compressor := picture.NewImageCompressor()
-    pictureService := picture.NewPictureService(pictureRepos, svc, awsS3Uploader, compressor)
+    pictureService := picture.NewPictureService(pictureRepos, svc, awsUploaderManager, compressor)
     pictureController := transport.NewPictureController(pictureService, downloader)
     eventService := event.NewEventService(postgres.NewEventRepository(connPool))
     eventController := transport.NewEventController(eventService)

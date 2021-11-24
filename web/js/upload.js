@@ -4,7 +4,7 @@
 
 function main() {
     const  BASE_URL = "http://localhost:8000";
-    // const BASE_URL = "https://evening-atoll-24533.herokuapp.com";
+    // const BASE_URL = "https://thawing-sea-83431.herokuapp.com";
     let resultsElement = document.getElementById("results");
     let uploadFormElement = document.getElementById("uploadForm");
     let fileInputElement = document.getElementById("fileInput");

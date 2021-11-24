@@ -4,7 +4,7 @@
 
 async function main() {
     const  BASE_URL = "http://localhost:8000";
-    // const BASE_URL = "https://evening-atoll-24533.herokuapp.com";
+    // const BASE_URL = "https://thawing-sea-83431.herokuapp.com";
     let resultsElement = document.getElementById("results");
     let searchFormElement = document.getElementById("searchForm");
     let searchInputElement = document.getElementById("searchInput");
@@ -28,7 +28,7 @@ async function main() {
             drawImages(data, resultsElement);
             console.log(data);
         } catch (err) {
-            resultsElement.innerHTML = 'Не найдено';
+            resultsElement.innerHTML = 'Not found';
 
             notFoundImages(resultsElement);
             console.log('error', err);
@@ -87,7 +87,7 @@ async function searchImages(baseUrl, options = {}) {
 }
 
 function notFoundImages(parentElement) {
-    document.getElementById('alert').innerHTML = 'Не найдено';
+    document.getElementById('alert').innerHTML = 'Not found';
 }
 
 function drawImages(data, parentElement, needClear = true) {

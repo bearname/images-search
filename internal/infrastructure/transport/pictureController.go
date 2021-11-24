@@ -122,8 +122,8 @@ func (c *PictureController) DetectImageFromDropboxUrl() func(http.ResponseWriter
             return
         }
 
-        dest := "test"
         src := "./test.zip"
+        dest := "test"
         err = unzip(src, dest)
 
         if err != nil {
