@@ -72,6 +72,8 @@ func (r *PictureRepositoryImpl) Search(dto picture.SearchPictureDto) (picture.Se
             LEFT JOIN pictures p on pictures_text_detection.picturesId = p.id
             LEFT JOIN events e on e.id = p.eventId ` + sqlWhere
 	}
+	fmt.Println("sqlCount")
+	fmt.Println(sqlCount)
 	rowsCount, err := r.connPool.Query(sqlCount, dataWhere...)
 	var result picture.SearchPictureResultDto
 
