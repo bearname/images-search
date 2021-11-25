@@ -35,7 +35,7 @@ var svc *rekognition.Rekognition
 //var photo = flag.String("photo", "pexels-oleg-magni-1427741.jpg", "The path to the photo file (JPEG, JPG, PNG)")
 
 func main() {
-
+	log.Println("Start at" + time.Now().String())
 	//flag.Parse()
 	//runtime.GOMAXPROCS(4)
 	log.SetFormatter(&log.JSONFormatter{})
@@ -106,6 +106,8 @@ func main() {
 	srv := httpServer.StartServer(getenv, handler)
 	httpServer.WaitForKillSignal(killSignalChan)
 	err = srv.Shutdown(context.TODO())
+	log.Println("Stop at" + time.Now().String())
+
 	if err != nil {
 		log.Error(err)
 		return
