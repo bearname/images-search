@@ -8,46 +8,46 @@ type CreateEventInputDto struct {
 
 //
 //func NewImageTextDetectionDto(eventId int64, originalPath string, previewPath string, textDetections []TextDetection) *TextDetectionOnImageDto {
-//	t := new(TextDetectionOnImageDto)
-//	t.EventId = eventId
-//	t.OriginalPath = originalPath
-//	t.PreviewPath = previewPath
-//	t.TextDetection = textDetections
-//	return t
+//    t := new(TextDetectionOnImageDto)
+//    t.EventId = eventId
+//    t.OriginalPath = originalPath
+//    t.PreviewPath = previewPath
+//    t.TextDetection = textDetections
+//    return t
 //}
 //
 //type SearchPictureDto struct {
-//	ParticipantNumber int
-//	Confidence        int
-//	Page              domain.Page
-//	EventId           int
+//    ParticipantNumber int
+//    Confidence        int
+//    Page              domain.Page
+//    EventId           int
 //}
 //
 //func NewSearchPictureDto(participantNumber int, confidence int, eventId int, page domain.Page) SearchPictureDto {
-//	return SearchPictureDto{
-//		ParticipantNumber: participantNumber,
-//		Confidence:        confidence,
-//		EventId:           eventId,
-//		Page:              page,
-//	}
+//    return SearchPictureDto{
+//        ParticipantNumber: participantNumber,
+//        Confidence:        confidence,
+//        EventId:           eventId,
+//        Page:              page,
+//    }
 //}
 //
 //type Event struct {
-//	EventId   int64
-//	EventName string
+//    EventId   int64
+//    EventName string
 //}
 //
 //type TextDetectionDto struct {
-//	TextDetection
-//	Event
+//    TextDetection
+//    Event
 //}
 //
 //type SearchPictureItem struct {
-//	PictureId      int
-//	Path           string
-//	TextDetections []TextDetectionDto
+//    PictureId      int
+//    Path           string
+//    TextDetections []TextDetectionDto
 //}
 //
 //type SearchPictureResultDto struct {
-//	Pictures []SearchPictureItem
+//    Pictures []SearchPictureItem
 //}

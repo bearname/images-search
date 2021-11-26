@@ -68,8 +68,8 @@ func (r *PictureRepositoryImpl) Search(dto picture.SearchPictureDto) (picture.Se
 		data = append(data, dto.EventId)
 	} else {
 		sqlCount = `SELECT COUNT (DISTINCT picturesId) AS COUNT
-            FROM pictures_text_detection
-            LEFT JOIN pictures p on pictures_text_detection.picturesId = p.id
+            FROM pictures_text_detection AS ptd
+            LEFT JOIN pictures p on ptd.picturesId = p.id
             LEFT JOIN events e on e.id = p.eventId ` + sqlWhere
 	}
 	fmt.Println("sqlCount")

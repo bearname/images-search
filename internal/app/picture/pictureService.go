@@ -40,16 +40,16 @@ func NewPictureService(pictureRepo picture.Repository, awsRekognition *rekogniti
 }
 
 //func (s *ServiceImpl) upload(filename string, file io.Reader, acl types.ObjectCannedACL) (*manager.UploadOutput, error) {
-//	index := strings.Index(filename, ".")
-//	fileName := filename[:index] + uuid.Generate().String() + filename[index+1:]
+//    index := strings.Index(filename, ".")
+//    fileName := filename[:index] + uuid.Generate().String() + filename[index+1:]
 //
-//	upload, err := s.uploader.Upload(context.TODO(), &s3.PutObjectInput{
-//		Bucket: aws.String(s.awsBucket),
-//		Key:    aws.String(fileName),
-//		Body:   file,
-//		ACL:    acl,
-//	})
-//	return upload, err
+//    upload, err := s.uploader.Upload(context.TODO(), &s3.PutObjectInput{
+//        Bucket: aws.String(s.awsBucket),
+//        Key:    aws.String(fileName),
+//        Body:   file,
+//        ACL:    acl,
+//    })
+//    return upload, err
 //}
 
 func (s *ServiceImpl) Create(imageTextDetectionDto *picture.TextDetectionOnImageDto) error {
@@ -810,10 +810,10 @@ func (s *ServiceImpl) detectText(decodedImage []byte, minConfidence int) ([]pict
 			Bytes: decodedImage,
 		},
 		//Image: &rekognition.Image{
-		//	S3Object: &rekognition.S3Object{
-		//		Bucket: bucket,
-		//		Name:   photo,
-		//	},
+		//    S3Object: &rekognition.S3Object{
+		//        Bucket: bucket,
+		//        Name:   photo,
+		//    },
 		//},
 	}
 

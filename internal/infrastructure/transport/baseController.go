@@ -56,29 +56,29 @@ func (c *BaseController) translateError(err error) transportError {
 			},
 		}
 		//} else if errors.Is(err, app.ErrUrlNotFound) {
-		//	return transportError{
-		//		Status: http.StatusNotFound,
-		//		Response: responseWithoutData{
-		//			Code:    102,
-		//			Message: err.Error(),
-		//		},
-		//	}
+		//    return transportError{
+		//        Status: http.StatusNotFound,
+		//        Response: responseWithoutData{
+		//            Code:    102,
+		//            Message: err.Error(),
+		//        },
+		//    }
 		//} else if errors.Is(err, app.ErrDuplicateUrl) {
-		//	return transportError{
-		//		Status: http.StatusConflict,
-		//		Response: responseWithoutData{
-		//			Code:    103,
-		//			Message: err.Error(),
-		//		},
-		//	}
+		//    return transportError{
+		//        Status: http.StatusConflict,
+		//        Response: responseWithoutData{
+		//            Code:    103,
+		//            Message: err.Error(),
+		//        },
+		//    }
 		//} else if errors.Is(err, app.ErrInvalidUrl) {
-		//	return transportError{
-		//		Status: http.StatusBadRequest,
-		//		Response: responseWithoutData{
-		//			Code:    104,
-		//			Message: err.Error(),
-		//		},
-		//	}
+		//    return transportError{
+		//        Status: http.StatusBadRequest,
+		//        Response: responseWithoutData{
+		//            Code:    104,
+		//            Message: err.Error(),
+		//        },
+		//    }
 	}
 
 	return transportError{

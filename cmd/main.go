@@ -97,7 +97,7 @@ func main() {
 	accessToken := os.Getenv("DROPBOX_ACCESS_TOKEN")
 	if len(accessToken) == 0 {
 		log.Fatal("DROPBOX_ACCESS_TOKEN not setted into env variable ")
-		//accessToken = "Hoih4cfQJFsAAAAAAAAAAUXzsZDZ2k8o74P9PhFED1VwJAGYZT_qQIQIBa7zFlsq"
+		//accessToken = ""
 	}
 	downloader := dropbox.NewSDKDownloader(accessToken)
 	awsS3Uploader := s32.NewAwsS3Uploader(uploader, conf.AwsS3Bucket)
@@ -160,7 +160,6 @@ func parseEnvInt(key string, err error) (int, error) {
 	return strconv.Atoi(s)
 }
 
-//postgres://cxzhykstalbgyi:cc469d81d726131f1ae98d8f8cbff091dbd7e9be7cce46a51674efa320f05f32@ec2-54-173-31-84.compute-1.amazonaws.com:5432/d7r53jijhba21i
 func ParseConfig() (*Config, error) {
 	var err error
 	serveRestAddress, err := parseEnvString("SERVE_REST_ADDRESS", err)
@@ -223,10 +222,10 @@ func init() {
 	//flag.Parse()
 	//
 	//if *bucket == "" || *photo == "" {
-	//	checks = false
-	//	flag.PrintDefaults()
-	//	fmt.Println("You must supply a bucket name (-b BUCKET) and photo file (-p PHOTO)")
-	//	return
+	//    checks = false
+	//    flag.PrintDefaults()
+	//    fmt.Println("You must supply a bucket name (-b BUCKET) and photo file (-p PHOTO)")
+	//    return
 	//}
 	//
 	//fileExtension := filepath.Ext(*photo)
