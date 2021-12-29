@@ -1,8 +1,6 @@
 # Simple face recognizer
 [Available at https://damp-lake-99927.herokuapp.com/](https://damp-lake-99927.herokuapp.com/)
 [Available at https://thawing-sea-83431.herokuapp.com/](https://thawing-sea-83431.herokuapp.com/)
-## Task
-[https://freelance.habr.com/tasks/376077](https://freelance.habr.com/tasks/376077)
 
 ## Setting Credentials
 Setting your credentials for use by the AWS SDK for Java can be done in a number of ways,  
