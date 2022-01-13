@@ -1,4 +1,4 @@
-.PHONY: download migrateup migratedown lint build buildWin run up down
+.PHONY: download migrateup migratedown lint build buildWin run up down herokulogs
 
 download:
 	go mod download
@@ -38,5 +38,8 @@ up: build
 
 down:
 	docker-compose down
+
+herokulogs:
+	heroku logs --tail
 
 all: download buildFront build
