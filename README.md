@@ -3,7 +3,7 @@
 [Available at ](https://thawing-sea-83431.herokuapp.com/)
 
 ## Setting Credentials
-Setting your credentials for use by the AWS SDK for Java can be done in a number of ways,  
+Setting your credentials for use by the AWS SDK can be done in a number of ways,  
 but here are the recommended approaches:
 
 Set credentials in the AWS credentials profile file on your local system, located at:
