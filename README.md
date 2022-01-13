@@ -31,3 +31,7 @@ Install [go-migrate](https://github.com/golang-migrate/migrate)
 `make migrateup`
 
 Open http://localhost:3000
+
+![Use case](./docs/images/use-case.png)
+![Components](./docs/images/components.png)
+![Sequence Diagram](./docs/images/sequence-diagram.png)
