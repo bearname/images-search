@@ -16,7 +16,6 @@ This file should contain lines in the following format:
 
 Install [go-migrate](https://github.com/golang-migrate/migrate)
 
-
 `+
 [default]`  
 `aws_access_key_id = your_access_key_id` 
@@ -32,6 +31,11 @@ Install [go-migrate](https://github.com/golang-migrate/migrate)
 
 Open http://localhost:3000
 
+### Use case
 ![Use case](./docs/images/use-case.png)
+
+### Components
 ![Components](./docs/images/components.png)
+
+### Sequence Diagram
 ![Sequence Diagram](./docs/images/sequence-diagram.png)
