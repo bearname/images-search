@@ -14,6 +14,9 @@ Set credentials in the AWS credentials profile file on your local system, locate
 
 This file should contain lines in the following format:
 
+Install [go-migrate](https://github.com/golang-migrate/migrate)
+
+
 `+
 [default]`  
 `aws_access_key_id = your_access_key_id` 
@@ -23,6 +26,8 @@ This file should contain lines in the following format:
 ## Build
 `make build`
 ## Run
-`make run`
+`make up`
+## Migration
+`make migrateup`
 
 Open http://localhost:3000

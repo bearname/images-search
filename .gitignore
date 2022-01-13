@@ -6,7 +6,6 @@ node_modules
 frontend/
 frontend/node_modules/
 frontend/package-lock.json
-data/
 cmd/aws-test/
 cmd/downloader/
 cmd/dropbox/
@@ -14,8 +13,12 @@ cmd/image/
 cmd/upload/
 html1/
 html/
+css
+web
 web1
 web2
 web/images/
 test.html
 test_resized.jpg
+docker-compose.yml
+.env

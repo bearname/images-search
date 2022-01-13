@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS events;
+DROP TABLE IF EXISTS pictures;
+DROP TABLE IF EXISTS pictures_text_detection;
+DROP TABLE IF EXISTS users;

@@ -15,16 +15,16 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"photofinish/internal/app/auth"
-	s32 "photofinish/internal/app/aws/s3"
-	"photofinish/internal/app/dropbox"
-	"photofinish/internal/app/event"
-	"photofinish/internal/app/picture"
-	"photofinish/internal/common/infrarstructure/server"
-	"photofinish/internal/domain"
-	"photofinish/internal/infrastructure/postgres"
-	"photofinish/internal/infrastructure/router"
-	"photofinish/internal/infrastructure/transport"
+	"photofinish/pkg/app/auth"
+	s32 "photofinish/pkg/app/aws/s3"
+	"photofinish/pkg/app/dropbox"
+	"photofinish/pkg/app/event"
+	"photofinish/pkg/app/picture"
+	"photofinish/pkg/common/infrarstructure/server"
+	"photofinish/pkg/domain"
+	"photofinish/pkg/infrastructure/postgres"
+	"photofinish/pkg/infrastructure/router"
+	"photofinish/pkg/infrastructure/transport"
 	"strconv"
 	"time"
 )
@@ -35,20 +35,19 @@ var svc *rekognition.Rekognition
 //var photo = flag.String("photo", "pexels-oleg-magni-1427741.jpg", "The path to the photo file (JPEG, JPG, PNG)")
 
 func main() {
-	log.Println("Start at" + time.Now().String())
 	//flag.Parse()
 	//runtime.GOMAXPROCS(4)
 	log.SetFormatter(&log.JSONFormatter{})
-	file, err := os.OpenFile("short.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-	if err == nil {
-		log.SetOutput(file)
-		defer func(file *os.File) {
-			err := file.Close()
-			if err != nil {
-				log.Error(err)
-			}
-		}(file)
-	}
+	//file, err := os.OpenFile("short.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+	//if err == nil {
+	//	log.SetOutput(file)
+	//	defer func(file *os.File) {
+	//		err = file.Close()
+	//		if err != nil {
+	//			log.Error(err)
+	//		}
+	//	}(file)
+	//}
 
 	conf, err := ParseConfig()
 	if err != nil {
@@ -81,9 +80,9 @@ func main() {
 	}
 
 	log.WithFields(log.Fields{"url": conf.ServeRestAddress}).Info("starting the httpServer")
-	getenv := os.Getenv("PORT")
-	if len(getenv) == 0 {
-		getenv = "8000"
+	port := os.Getenv("PORT")
+	if len(port) == 0 {
+		port = "8000"
 	}
 	httpServer := server.HttpServer{}
 	killSignalChan := httpServer.GetKillSignalChan()
@@ -103,7 +102,7 @@ func main() {
 	awsS3Uploader := s32.NewAwsS3Uploader(uploader, conf.AwsS3Bucket)
 	handler := initHandlers(pool, awsS3Uploader, downloader)
 
-	srv := httpServer.StartServer(getenv, handler)
+	srv := httpServer.StartServer(port, handler)
 	httpServer.WaitForKillSignal(killSignalChan)
 	err = srv.Shutdown(context.TODO())
 	log.Println("Stop at" + time.Now().String())
@@ -122,11 +121,10 @@ func initHandlers(connPool *pgx.ConnPool, awsUploaderManager domain.Uploader, do
 	eventService := event.NewEventService(postgres.NewEventRepository(connPool))
 	eventController := transport.NewEventController(eventService)
 
-	repository := postgres.NewUserRepository(connPool)
-	service := auth.NewAuthService(repository)
-	controller := transport.NewAuthController(service)
-	handler := router.Router(pictureController, eventController, controller)
-	return handler
+	userRepository := postgres.NewUserRepository(connPool)
+	authService := auth.NewAuthService(userRepository)
+	authController := transport.NewAuthController(authService)
+	return router.Router(pictureController, eventController, authController)
 }
 
 type Config struct {

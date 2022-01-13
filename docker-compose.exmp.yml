@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  photobackend:
+    ports:
+      - 8000:8000
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SERVE_REST_ADDRESS: photobackend:8000
+      DROPBOX_ACCESS_TOKEN: token
+      DATABASE_ADDRESS: url-short-postgres
+      DATABASE_NAME: url-short
+      DATABASE_USER: url-short
+      DATABASE_PASSWORD: 1234
+      DATABASE_MAX_CONNECTION: 10
+      DATABASE_ACQUIRE_TIMEOUT: 1000
+      AWS_S3_REGION: eu-central-1
+      AWS_S3_BUCKET: img-rekongnition-test2
+      AWS_SECRET_ACCESS_KEY: accessKey
+      AWS_SECRET: awsSecret
+
+    restart: always
+    networks:
+      - dev-network
+    depends_on:
+      - photo-postgres
+
+  photo-postgres:
+    image: postgres:10.5
+    hostname: url-short-postgres
+    restart: always
+    ports:
+      - '5432:5432'
+    volumes:
+      - url-short-postgres-data:/var/lib/postgresql/data
+      - ./data/migrations/001_create_urls_table.up.sql:/docker-entrypoint-initdb.d/create_tables.sql
+    environment:
+      POSTGRES_USER: url-short
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: url-short
+    networks:
+      - dev-network
+
+volumes:
+  url-short-postgres-data:
+
+networks:
+  # Create a new Docker network.
+  dev-network:
+    driver: bridge
