@@ -1,10 +1,11 @@
 package event
 
-//type Event struct {
-//	Id       int
-//	Name     string
-//	Location string
-//}
+type Event struct {
+	Id       int
+	Name     string
+	Location string
+}
+
 //
 //func NewEvent(id int, name string, location string) *Event {
 //	t := new(Event)

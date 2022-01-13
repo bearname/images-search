@@ -13,7 +13,8 @@ cmd/image/
 cmd/upload/
 html1/
 html/
-css
+go
+css/
 web
 web1
 web2
