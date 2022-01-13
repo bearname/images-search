@@ -21,7 +21,7 @@ cleanFront:
 buildFront:
 	cd frontend && npm install && npm run build && cd .. && xcopy  /e "frontend\dist\*.*" "dist\*.*"
 
-run: build
+run: buildWin
 	face-server.exe
 
 migrateup:
