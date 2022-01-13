@@ -25,3 +25,5 @@ docker-compose.yml
 .env
 *.log
 *.bat
+*.dat
+*.zip
