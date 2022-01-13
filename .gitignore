@@ -23,3 +23,5 @@ test.html
 test_resized.jpg
 docker-compose.yml
 .env
+*.log
+*.bat

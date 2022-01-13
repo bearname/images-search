@@ -25,6 +25,7 @@ import (
 	"photofinish/pkg/infrastructure/postgres"
 	"photofinish/pkg/infrastructure/router"
 	"photofinish/pkg/infrastructure/transport"
+	"runtime"
 	"strconv"
 	"time"
 )
@@ -36,18 +37,18 @@ var svc *rekognition.Rekognition
 
 func main() {
 	//flag.Parse()
-	//runtime.GOMAXPROCS(4)
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	log.SetFormatter(&log.JSONFormatter{})
-	//file, err := os.OpenFile("short.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-	//if err == nil {
-	//	log.SetOutput(file)
-	//	defer func(file *os.File) {
-	//		err = file.Close()
-	//		if err != nil {
-	//			log.Error(err)
-	//		}
-	//	}(file)
-	//}
+	file, err := os.OpenFile("short.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+	if err == nil {
+		log.SetOutput(file)
+		defer func(file *os.File) {
+			err = file.Close()
+			if err != nil {
+				log.Error(err)
+			}
+		}(file)
+	}
 
 	conf, err := ParseConfig()
 	if err != nil {
