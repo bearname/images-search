@@ -20,6 +20,8 @@ Install [go-migrate](https://github.com/golang-migrate/migrate)
 [default]`  
 `aws_access_key_id = your_access_key_id` 
 `aws_secret_access_key = your_secret_access_key`
+## Clone repo
+`git clone https://github.com/bearname/photofinish-frontend frontend`
 ## First building run command
 `make download`
 ## Build
