@@ -58,16 +58,16 @@ Loop:
   4) Сжать изображение для mobile и сохранить в S3
 
 
-```go
-struct Picture {
-    ID
-    Path
-
-    IsOriginalSaved
-    IsPreviewScaled
-    IsTextRekongized
-    IsMobileScaled
-}
+```
+// type Picture struct {
+//    ID
+//    Path
+//
+//    IsOriginalSaved
+//    IsPreviewScaled
+//    IsTextRekongized
+//    IsMobileScaled
+//}
 ```
 
 Добавить запуск rawImageHandler (сервис по обработке не удачно обработанных изображений)
