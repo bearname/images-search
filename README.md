@@ -41,3 +41,36 @@ Open http://localhost:3000
 
 ### Sequence Diagram
 ![Sequence Diagram](./docs/images/sequence-diagram.png)
+
+
+### Needed 
+![Sequence Diagram](./docs/Architecture%20-%20Copy.png)
+
+
+Шаги при добавлении новых изображений:
+
+1) Получить список изображений из папки dropbox
+2) Сохранить список изображений в бд
+Loop:
+  1) Сохранить Оригинальное изображение в S3 
+  2) Сжать изображение для preview, сохранить в S3 
+  3) Разспознать текст из изображения
+  4) Сжать изображение для mobile и сохранить в S3
+
+
+```go
+struct Picture {
+    ID
+    Path
+
+    IsOriginalSaved
+    IsPreviewScaled
+    IsTextRekongized
+    IsMobileScaled
+}
+```
+
+Добавить запуск rawImageHandler (сервис по обработке не удачно обработанных изображений)
+Добавить запуск знатия заблоченных ворекеров
+Добавить возможность отслеживания процента выполненных задач
+
