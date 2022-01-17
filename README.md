@@ -2,6 +2,9 @@
 [Available at](https://damp-lake-99927.herokuapp.com/)
 [Available at ](https://thawing-sea-83431.herokuapp.com/)
 
+## Photofinisih
+Сервис для поиска фотографий спортсмена по номеру участника
+
 ## Setting Credentials
 Setting your credentials for use by the AWS SDK can be done in a number of ways,  
 but here are the recommended approaches:
