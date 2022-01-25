@@ -1,6 +1,9 @@
-package picture
+package pictures
 
-import "photofinish/pkg/domain"
+import (
+	"photofinish/pkg/common/util/uuid"
+	"photofinish/pkg/domain/dto"
+)
 
 type TextDetectionOnImageDto struct {
 	EventId       int64
@@ -9,23 +12,14 @@ type TextDetectionOnImageDto struct {
 	TextDetection []TextDetection
 }
 
-func NewImageTextDetectionDto(eventId int64, originalPath string, previewPath string, textDetections []TextDetection) *TextDetectionOnImageDto {
-	t := new(TextDetectionOnImageDto)
-	t.EventId = eventId
-	t.OriginalPath = originalPath
-	t.PreviewPath = previewPath
-	t.TextDetection = textDetections
-	return t
-}
-
 type SearchPictureDto struct {
 	ParticipantNumber int
 	Confidence        int
-	Page              domain.Page
+	Page              dto.Page
 	EventId           int
 }
 
-func NewSearchPictureDto(participantNumber int, confidence int, eventId int, page domain.Page) SearchPictureDto {
+func NewSearchPictureDto(participantNumber int, confidence int, eventId int, page dto.Page) SearchPictureDto {
 	return SearchPictureDto{
 		ParticipantNumber: participantNumber,
 		Confidence:        confidence,
@@ -53,4 +47,35 @@ type SearchPictureItem struct {
 type SearchPictureResultDto struct {
 	CountAllItems int
 	Pictures      []SearchPictureItem
+}
+type InitialDropboxImage struct {
+	Images  []string
+	EventId int
+	Path    string
+}
+
+type InitialDropboxImageResult struct {
+	ImagesId []uuid.UUID
+	TaskId   uuid.UUID
+}
+
+type TaskResponse struct {
+	TaskId          string
+	CountAllImages  int
+	CompletedImages int
+}
+
+type DropboxImage struct {
+	Path    string
+	EventId int
+	Id      uuid.UUID
+}
+type DropboxImages struct {
+	Images  []DropboxImage
+	EventId int
+}
+
+type InitialImage struct {
+	EventId     int64
+	DropboxPath string
 }

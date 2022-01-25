@@ -221,6 +221,41 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "detect text from dropbox Copy",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJleHAiOjE5NTc3MDM4NzcsInJvbGUiOjAsInVzZXJuYW1lIjoiYWRtaW4ifQ.WyYQrO5XvD9igJ1nXDG9_HMr4D-Rwf6j0zE51rrnR-w",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8000/api/v1/pictures/dropbox-folder",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"pictures",
+								"dropbox-folder"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -277,7 +312,7 @@
 							"formdata": []
 						},
 						"url": {
-							"raw": "http://localhost:8000/api/v1/tasks/d517dc7b-975c-4e9d-a847-f6843ca2ff86/stats",
+							"raw": "http://localhost:8000/api/v1/tasks/f319afc0-c920-463b-9f7b-071b5a5783d0/stats",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -287,7 +322,7 @@
 								"api",
 								"v1",
 								"tasks",
-								"d517dc7b-975c-4e9d-a847-f6843ca2ff86",
+								"f319afc0-c920-463b-9f7b-071b5a5783d0",
 								"stats"
 							]
 						}
@@ -313,7 +348,7 @@
 							"formdata": []
 						},
 						"url": {
-							"raw": "http://localhost:8000/api/v1/tasks/b5002ca7-d355-4b18-a1ec-c6780f41ee9e/stats",
+							"raw": "http://localhost:8000/api/v1/tasks/09667be9-8cf0-4174-b99b-a1d16b9be38d/stats",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -323,7 +358,7 @@
 								"api",
 								"v1",
 								"tasks",
-								"b5002ca7-d355-4b18-a1ec-c6780f41ee9e",
+								"09667be9-8cf0-4174-b99b-a1d16b9be38d",
 								"stats"
 							]
 						}

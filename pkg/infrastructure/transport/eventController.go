@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
-	"photofinish/pkg/domain"
+	"photofinish/pkg/domain/dto"
 	"photofinish/pkg/domain/event"
 	"strconv"
 )
@@ -36,24 +36,24 @@ func (c *EventController) CreateEvent() func(http.ResponseWriter, *http.Request)
 		all, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, "Invalid json body. ", 400)
+			http.Error(w, "Invalid json body. ", http.StatusBadRequest)
 			return
 		}
 		var t event.CreateEventInputDto
 		err = json.Unmarshal(all, &t)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, "Invalid json body. required field: name, location, date ", 400)
+			http.Error(w, "Invalid json body. required field: name, location, date ", http.StatusBadRequest)
 			return
 		}
 		eventId, err := c.service.Create(&t)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, "Failed create event", 400)
+			http.Error(w, "Failed create event", http.StatusBadRequest)
 			return
 		}
 
-		c.WriteJsonResponse(w, responseWithoutData{1, "Success create event. Id " + strconv.Itoa(eventId)})
+		c.WriteJsonResponse(w, responseWithoutData{1, "Success create event. TaskId " + strconv.Itoa(eventId)})
 	}
 }
 
@@ -72,22 +72,22 @@ func (c *EventController) DeleteEvent() func(http.ResponseWriter, *http.Request)
 		var err error
 		if len(idString) == 0 {
 			log.Println(err)
-			http.Error(w, "Invalid 'id' query parameter. 'Number' must be number", 400)
+			http.Error(w, "Invalid 'id' query parameter. 'Number' must be number", http.StatusBadRequest)
 			return
 		}
 
-		atoi, err := strconv.Atoi(idString)
+		eventId, err := strconv.Atoi(idString)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, "Event id must be positive number", 400)
+			http.Error(w, "Event id must be positive number", http.StatusBadRequest)
 			return
 		}
 
-		err = c.service.DeleteEvent(atoi)
+		err = c.service.DeleteEvent(eventId)
 		if err != nil {
 			fmt.Println(err.Error())
 			log.Println(err)
-			http.Error(w, err.Error(), 400)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -113,12 +113,12 @@ func (c *EventController) List() func(http.ResponseWriter, *http.Request) {
 			if err != nil {
 				log.Println(err)
 				log.Println("Invalid 'limit' query parameter. 'limit' must be in range [0, 100]")
-				http.Error(w, "Invalid 'limit' query parameter. 'limit' must be in range [0, 100]", 400)
+				http.Error(w, "Invalid 'limit' query parameter. 'limit' must be in range [0, 100]", http.StatusBadRequest)
 				return
 			}
 			if limit < 0 || limit > 100 {
 				log.Println("Invalid 'limit' query parameter. 'limit' must be in range [0, 100]")
-				http.Error(w, "Invalid 'limit' query parameter. 'limit' must be in range [0, 100]", 400)
+				http.Error(w, "Invalid 'limit' query parameter. 'limit' must be in range [0, 100]", http.StatusBadRequest)
 				return
 			}
 		}
@@ -129,21 +129,21 @@ func (c *EventController) List() func(http.ResponseWriter, *http.Request) {
 			if err != nil {
 				log.Println(err)
 				log.Println("Invalid 'offset' query parameter. 'offset' must be in range [0, 100]")
-				http.Error(w, "Invalid 'offset' query parameter. 'offset' must be in range [0, 100]", 400)
+				http.Error(w, "Invalid 'offset' query parameter. 'offset' must be in range [0, 100]", http.StatusBadRequest)
 				return
 			}
 			if offset < 0 {
 				log.Println("Invalid 'offset' query parameter. 'offset' must be in range [0, 100]")
-				http.Error(w, "Invalid 'offset' query parameter. 'offset' must be in range [0, 100]", 400)
+				http.Error(w, "Invalid 'offset' query parameter. 'offset' must be in range [0, 100]", http.StatusBadRequest)
 				return
 			}
 		}
 
-		events, err := c.service.Search(domain.Page{Offset: offset, Limit: limit})
+		events, err := c.service.Search(dto.Page{Offset: offset, Limit: limit})
 		if err != nil {
 			fmt.Println(err.Error())
 			log.Println(err)
-			http.Error(w, "Failed found pictures", 400)
+			http.Error(w, "Failed found pictures", http.StatusBadRequest)
 			return
 		}
 		fmt.Println(events)

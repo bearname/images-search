@@ -8,9 +8,7 @@ import (
 	"photofinish/pkg/infrastructure/transport"
 )
 
-func Router(pictureController *transport.PictureController,
-	eventsController *transport.EventController,
-	authController *transport.AuthController) http.Handler {
+func Router(pictureController *transport.PictureController, eventsController *transport.EventController, authController *transport.AuthController, tasksController *transport.TasksController) http.Handler {
 
 	router := mux.NewRouter()
 
@@ -18,13 +16,16 @@ func Router(pictureController *transport.PictureController,
 	router.HandleFunc("/ready", readyCheckHandler).Methods(http.MethodGet)
 
 	apiV1Route := router.PathPrefix("/api/v1").Subrouter()
+	apiV1Route.HandleFunc("/tasks/{id}/stats", authController.CheckTokenHandler(tasksController.GetStatistic())).Methods(http.MethodGet, http.MethodOptions)
+
 	apiV1Route.HandleFunc("/events", authController.CheckTokenHandler(eventsController.List())).Methods(http.MethodGet, http.MethodOptions)
 	apiV1Route.HandleFunc("/events", authController.CheckTokenHandler(eventsController.CreateEvent())).Methods(http.MethodPost, http.MethodOptions)
 	apiV1Route.HandleFunc("/events/{id}", authController.CheckTokenHandler(eventsController.DeleteEvent())).Methods(http.MethodDelete, http.MethodOptions)
 
-	apiV1Route.HandleFunc("/picture/search", pictureController.SearchPictures()).Methods(http.MethodGet, http.MethodOptions)
-	apiV1Route.HandleFunc("/picture/detectText/dropbox", authController.CheckTokenHandler(pictureController.DetectImageFromDropboxUrl())).Methods(http.MethodPost, http.MethodOptions)
-	apiV1Route.HandleFunc("/picture/{id}", authController.CheckTokenHandler(pictureController.DeletePicture())).Methods(http.MethodDelete, http.MethodOptions)
+	apiV1Route.HandleFunc("/pictures/search", pictureController.SearchPictures()).Methods(http.MethodGet, http.MethodOptions)
+	apiV1Route.HandleFunc("/pictures/dropbox-folders", authController.CheckTokenHandler(pictureController.GetDropboxFolders())).Methods(http.MethodGet, http.MethodOptions)
+	apiV1Route.HandleFunc("/pictures/detectText/dropbox", authController.CheckTokenHandler(pictureController.DetectImageFromDropboxUrl())).Methods(http.MethodPost, http.MethodOptions)
+	apiV1Route.HandleFunc("/pictures/{id}", authController.CheckTokenHandler(pictureController.DeletePicture())).Methods(http.MethodDelete, http.MethodOptions)
 
 	apiV1Route.HandleFunc("/auth/login", authController.Login).Methods(http.MethodPost, http.MethodOptions)
 	apiV1Route.HandleFunc("/auth/token", authController.CheckTokenHandler(authController.RefreshToken)).Methods(http.MethodGet, http.MethodOptions)

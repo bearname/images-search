@@ -1,0 +1,8 @@
+FROM alpine
+
+ADD ./bin/imageProcessor /app/bin/imageProcessor
+COPY ./dist ./app/bin/web
+RUN chmod +x /app/bin/imageProcessor
+WORKDIR /app
+RUN apk --no-cache add ca-certificates
+CMD ["/app/bin/imageProcessor", "-d", "false"]

@@ -14,8 +14,7 @@ func NewMockUploader() *MockUploader {
 	return s
 }
 
-func (s *MockUploader) Upload(filename string, file io.Reader, acl types.ObjectCannedACL) (*domain.UploadOutput, error) {
-	//index := strings.Index(filename, ".")
+func (s *MockUploader) Upload(_ string, _ io.Reader, _ types.ObjectCannedACL) (*domain.UploadOutput, error) {
 
 	var id = "uploadOutput.VersionID"
 	return &domain.UploadOutput{

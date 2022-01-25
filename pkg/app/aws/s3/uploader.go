@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"io"
-	"photofinish/pkg/common/uuid"
+	"photofinish/pkg/common/util/uuid"
 	"photofinish/pkg/domain"
 	"strings"
 )

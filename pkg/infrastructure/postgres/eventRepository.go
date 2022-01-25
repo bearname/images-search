@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx"
-	"photofinish/pkg/domain"
+	"photofinish/pkg/domain/dto"
 	"photofinish/pkg/domain/event"
 )
 
@@ -36,7 +36,7 @@ func (r *EventRepositoryImpl) CheckExist(pictureId int) error {
 	return nil
 }
 
-func (r *EventRepositoryImpl) FindAll(page domain.Page) ([]event.Event, error) {
+func (r *EventRepositoryImpl) FindAll(page dto.Page) ([]event.Event, error) {
 	sql := "SELECT id, name, location FROM events LIMIT $1 OFFSET $2;"
 	var data []interface{}
 	data = append(data, page.Limit, page.Offset)

@@ -48,7 +48,7 @@ func (c *customSet) Add(key string, confidence float64) {
 func (c *customSet) Remove(key string) error {
 	_, exists := c.container[key]
 	if !exists {
-		return fmt.Errorf("Remove Error: Item doesn't exist in set")
+		return fmt.Errorf("remove Error: Item doesn't exist in set")
 	}
 	delete(c.container, key)
 	return nil

@@ -3,6 +3,7 @@
 .idea
 bin/
 node_modules
+payment
 frontend/
 frontend/node_modules/
 frontend/package-lock.json
@@ -27,3 +28,9 @@ docker-compose.yml
 *.bat
 *.dat
 *.zip
+/frontend/
+coordinator.go
+dropbox.go
+dropboxZip.go
+main.go
+util

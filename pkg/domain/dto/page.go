@@ -1,4 +1,4 @@
-package domain
+package dto
 
 type Page struct {
 	Limit  int

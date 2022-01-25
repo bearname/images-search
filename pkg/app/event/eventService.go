@@ -2,7 +2,7 @@ package event
 
 import (
 	log "github.com/sirupsen/logrus"
-	"photofinish/pkg/domain"
+	"photofinish/pkg/domain/dto"
 	"photofinish/pkg/domain/event"
 )
 
@@ -16,7 +16,7 @@ func NewEventService(eventRepo event.Repository) *ServiceImpl {
 	return s
 }
 
-func (s *ServiceImpl) Search(page domain.Page) ([]event.Event, error) {
+func (s *ServiceImpl) Search(page dto.Page) ([]event.Event, error) {
 	return s.eventRepo.FindAll(page)
 }
 

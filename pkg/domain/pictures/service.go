@@ -1,8 +1,9 @@
-package picture
+package pictures
 
 type Service interface {
 	Create(imageTextDetectionDto *TextDetectionOnImageDto) error
-	DetectImageFromArchive(root string, minConfidence int, eventId int64) error
+	DetectImageFromUrl(root string, eventId int) (*TaskResponse, error)
 	Search(dto SearchPictureDto) (SearchPictureResultDto, error)
 	Delete(imageId string) error
+	GetDropboxFolders() ([]string, error)
 }

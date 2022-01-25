@@ -1,6 +1,9 @@
 package db
 
-import "database/sql"
+import (
+	"database/sql"
+	"github.com/jackc/pgx"
+)
 
 type Connector interface {
 	GetDb() *sql.DB
@@ -16,12 +19,12 @@ type Transaction interface {
 	QueryRow(query string, args ...interface{}) *sql.Row
 }
 
-type TxFn func(Transaction) error
+type TxFn func(tx *pgx.Tx) error
 
-func WithTransaction(db *sql.DB, fn TxFn) (err error) {
+func WithTransaction(db *pgx.ConnPool, fn TxFn) error {
 	tx, err := db.Begin()
 	if err != nil {
-		return
+		return err
 	}
 
 	defer func() {

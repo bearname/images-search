@@ -2,8 +2,6 @@ package uuid
 
 import "github.com/google/uuid"
 
-//import uuid "github.com/satori/go.uuid"
-
 type UUID [16]byte
 
 func (u UUID) String() string {

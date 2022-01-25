@@ -11,35 +11,38 @@ import (
 	"syscall"
 )
 
-func ExecuteServer(appName string, port int, router http.Handler) {
+func ExecuteServer(appName string, port int, router http.Handler) error {
 	log.SetFormatter(&log.JSONFormatter{})
 	file, err := os.OpenFile(appName+".log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-	if err == nil {
-		log.SetOutput(file)
-		defer file.Close()
+	if err != nil {
+		return err
 	}
+	log.SetOutput(file)
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			return
+		}
+	}(file)
+
 	log.Info("Started ")
 	server := HttpServer{}
 	killSignalChan := server.GetKillSignalChan()
 
-	serverUrl := ":" + strconv.Itoa(port)
+	host := strconv.Itoa(port)
+	serverUrl := ":" + host
 	log.WithFields(log.Fields{"url": serverUrl}).Info("starting the server")
 
-	getenv := os.Getenv("PORT")
-	srv := server.StartServer(getenv, router)
+	srv := server.StartServer(host, router)
 	fmt.Println(serverUrl)
 	server.WaitForKillSignal(killSignalChan)
-	err = srv.Shutdown(context.Background())
-	if err != nil {
-		return
-	}
+	return srv.Shutdown(context.Background())
 }
 
 type HttpServer struct {
 }
 
 func (s *HttpServer) StartServer(port string, handler http.Handler) *http.Server {
-
 	srv := &http.Server{Addr: ":" + port, Handler: handler}
 	log.Error(srv.ListenAndServe())
 	return srv
