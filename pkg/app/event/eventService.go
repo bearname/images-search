@@ -16,7 +16,7 @@ func NewEventService(eventRepo event.Repository) *ServiceImpl {
 	return s
 }
 
-func (s *ServiceImpl) Search(page dto.Page) ([]event.Event, error) {
+func (s *ServiceImpl) Search(page *dto.Page) ([]event.Event, error) {
 	return s.eventRepo.FindAll(page)
 }
 

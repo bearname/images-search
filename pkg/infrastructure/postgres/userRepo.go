@@ -16,7 +16,7 @@ func NewUserRepository(connPool *pgx.ConnPool) *UserRepository {
 }
 
 func (r *UserRepository) CreateUser(username string, password []byte, role user.Role) error {
-	sqlQuery := "INSERT INTO users (username, passwd, user_role) VALUES ($1, $2, $3);"
+	sqlQuery := r.getCreateUserSql()
 	query, err := r.connPool.Query(sqlQuery, username, string(password), role)
 	if err != nil {
 		return err
@@ -27,10 +27,14 @@ func (r *UserRepository) CreateUser(username string, password []byte, role user.
 	return nil
 }
 
+func (r *UserRepository) getCreateUserSql() string {
+	return "INSERT INTO users (username, passwd, user_role) VALUES ($1, $2, $3);"
+}
+
 func (r *UserRepository) FindByUserName(username string) (user.User, error) {
 	var dbUser user.User
 
-	row := r.connPool.QueryRow("SELECT id, username, passwd, user_role FROM users WHERE username = $1;", username)
+	row := r.connPool.QueryRow(r.getFindUserSql(), username)
 
 	err := row.Scan(
 		&dbUser.Id,
@@ -40,4 +44,8 @@ func (r *UserRepository) FindByUserName(username string) (user.User, error) {
 	)
 
 	return dbUser, err
+}
+
+func (r *UserRepository) getFindUserSql() string {
+	return "SELECT id, username, passwd, user_role FROM users WHERE username = $1;"
 }

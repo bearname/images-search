@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/streadway/amqp"
 	"net/http"
 	_ "net/http/pprof"
 	"photofinish/pkg/common/util"
@@ -94,7 +95,7 @@ func main() {
 	}
 	client := s3.NewFromConfig(cfg)
 	uploader := manager.NewUploader(client)
-	connector, err := db.GetConnector(dbDSN, maxConnections, acquireTimeout)
+	connector, err := db.GetDBConfig(dbDSN, maxConnections, acquireTimeout)
 
 	if err != nil {
 		log.Fatal(err.Error())
@@ -138,20 +139,7 @@ func main() {
 		defer wg.Done()
 		for message := range messages {
 			// For example, show received message in a console.
-			log.Printf(" > Received message: %s\n", message.Body)
-			var initial pictures.DropboxImages
-
-			err = json.Unmarshal(message.Body, &initial)
-			if err != nil {
-				log.Println(err)
-			}
-			fmt.Println(len(initial.Images))
-			time.Sleep(2 * time.Second)
-			//id := initial.EventId
-
-			for _, image := range initial.Images {
-				ch <- image
-			}
+			handleMessage(message, err, ch)
 			close(ch)
 		}
 	}()
@@ -168,6 +156,24 @@ func main() {
 	wg.Wait()
 
 	<-forever
+}
+
+func handleMessage(message amqp.Delivery, err error, ch chan pictures.DropboxImage) {
+	log.Printf(" > Received message: %s\n", message.Body)
+	var initial pictures.DropboxImages
+
+	err = json.Unmarshal(message.Body, &initial)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	fmt.Println(len(initial.Images))
+	time.Sleep(2 * time.Second)
+	//id := initial.EventId
+
+	for _, image := range initial.Images {
+		ch <- image
+	}
 }
 
 func handleImageAsync(ch chan pictures.DropboxImage, wg *sync.WaitGroup, pictureCoordinator *picture.CoordinatorServiceImpl) {

@@ -1,6 +1,7 @@
 package pictures
 
 import (
+	"errors"
 	"photofinish/pkg/common/util/uuid"
 	"time"
 )
@@ -13,7 +14,11 @@ const (
 	Success ProcessingStatus = iota
 	Processing
 	Failed
+	TooBig
+	Deleted
 )
+
+var ErrNotFound = errors.New("pictures not exist")
 
 type Picture struct {
 	Id      uuid.UUID

@@ -41,9 +41,8 @@ func main() {
 		log.Fatal(errors.New("invalid DATABASE_MAX_CONNECTION"))
 	}
 
-	connector, err := db.GetConnector(dsn, maxConnections, acquireTimeout)
+	connector, err := db.GetDBConfig(dsn, maxConnections, acquireTimeout)
 
-	//fmt.Println(uploader)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

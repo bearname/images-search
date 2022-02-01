@@ -15,3 +15,11 @@ type TaskStats struct {
 	StartedAt     time.Time
 	LastUpdatedAt time.Time
 }
+
+type TaskReturnDTO struct {
+	Id           string
+	IsCompleted  bool
+	CountImages  int
+	StartedAt    time.Time
+	LastUpdateAt time.Time
+}

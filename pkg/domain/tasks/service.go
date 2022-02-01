@@ -1,5 +1,10 @@
 package tasks
 
+import (
+	"photofinish/pkg/domain/dto"
+)
+
 type Service interface {
-	GetStatistics(taskId string) (*TaskStats, error)
+	GetTaskStatistic(taskId string) (*TaskStats, error)
+	GetTasks(page *dto.Page) (*[]TaskReturnDTO, error)
 }

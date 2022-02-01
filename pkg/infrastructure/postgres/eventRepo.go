@@ -19,7 +19,7 @@ func NewEventRepository(connPool *pgx.ConnPool) *EventRepositoryImpl {
 }
 
 func (r *EventRepositoryImpl) CheckExist(pictureId int) error {
-	sql := "SELECT id FROM events WHERE id=$1"
+	const sql = "SELECT id FROM events WHERE id=$1"
 	rows, err := r.connPool.Query(sql, pictureId)
 	if err != nil {
 		return err
@@ -36,23 +36,34 @@ func (r *EventRepositoryImpl) CheckExist(pictureId int) error {
 	return nil
 }
 
-func (r *EventRepositoryImpl) FindAll(page dto.Page) ([]event.Event, error) {
-	sql := "SELECT id, name, location FROM events LIMIT $1 OFFSET $2;"
+func (r *EventRepositoryImpl) FindAll(page *dto.Page) ([]event.Event, error) {
+	const sql = "SELECT id, name, location FROM events LIMIT $1 OFFSET $2;"
 	var data []interface{}
 	data = append(data, page.Limit, page.Offset)
+
 	rows, err := r.connPool.Query(sql, data...)
 	if err != nil {
 		return nil, err
 	}
+
 	defer rows.Close()
 	if rows.Err() != nil {
 		return nil, rows.Err()
 	}
 
+	events, err := r.scanEvents(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return events, nil
+}
+
+func (r *EventRepositoryImpl) scanEvents(rows *pgx.Rows) ([]event.Event, error) {
 	var events []event.Event
 	var eventItem event.Event
 	for rows.Next() {
-		err = rows.Scan(
+		err := rows.Scan(
 			&eventItem.Id,
 			&eventItem.Name,
 			&eventItem.Location,
@@ -62,7 +73,6 @@ func (r *EventRepositoryImpl) FindAll(page dto.Page) ([]event.Event, error) {
 		}
 		events = append(events, eventItem)
 	}
-
 	return events, nil
 }
 
@@ -73,7 +83,8 @@ func (r *EventRepositoryImpl) Store(eventDto *event.CreateEventInputDto) (int, e
 
 	fmt.Println(data)
 	lastInsertId := -1
-	row := r.connPool.QueryRow("INSERT INTO events (name, date, location) VALUES ($1, $2, $3) RETURNING id", data...)
+	const sql = "INSERT INTO events (name, date, location) VALUES ($1, $2, $3) RETURNING id"
+	row := r.connPool.QueryRow(sql, data...)
 	err := row.Scan(&lastInsertId)
 	if err != nil {
 		return 0, err
@@ -83,7 +94,7 @@ func (r *EventRepositoryImpl) Store(eventDto *event.CreateEventInputDto) (int, e
 }
 
 func (r *EventRepositoryImpl) Delete(eventId int) error {
-	sql := "DELETE FROM events WHERE id=$1"
+	const sql = "DELETE FROM events WHERE id=$1"
 	rows, err := r.connPool.Query(sql, eventId)
 	if err != nil {
 		return err

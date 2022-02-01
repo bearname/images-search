@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rekognition"
@@ -14,8 +16,10 @@ import (
 	"photofinish/pkg/app/auth"
 	"photofinish/pkg/app/dropbox"
 	"photofinish/pkg/app/event"
+	"photofinish/pkg/app/paySystem"
 	"photofinish/pkg/app/picture"
 	"photofinish/pkg/app/tasks"
+	"photofinish/pkg/app/user"
 	rabbitmq "photofinish/pkg/common/infrarstructure/amqp"
 	"photofinish/pkg/common/infrarstructure/db"
 	"photofinish/pkg/common/infrarstructure/server"
@@ -56,7 +60,7 @@ func main() {
 	fmt.Println(conf.DropboxAccessToken)
 	fmt.Println("\n\n\n\n\n\n\n\nconf.DropboxAccessToken")
 	url := db.GetUrl(conf.DbUser, conf.DbPassword, conf.DbAddress, conf.DbName)
-	connector, err := db.GetConnector(url, conf.MaxConnections, conf.AcquireTimeout)
+	connector, err := db.GetDBConfig(url, conf.MaxConnections, conf.AcquireTimeout)
 
 	if err != nil {
 		log.Fatal(err.Error())
@@ -83,12 +87,19 @@ func main() {
 		return
 	}
 	defer func(amqpChannel *amqp.Channel) {
-		err := amqpChannel.Close()
+		err = amqpChannel.Close()
 		if err != nil {
 			return
 		}
 	}(amqpChannel)
-	handler := initHandlers(pool, amqpChannel, conf.DropboxAccessToken)
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(c.AwsS3Region))
+	if err != nil {
+		log.Fatal(err)
+	}
+	client := s3.NewFromConfig(cfg)
+
+	handler := initHandlers(pool, amqpChannel, conf.DropboxAccessToken, conf.StripeSecretKey, client, c.AwsS3Bucket)
 
 	log.Println("Start on port '" + port + " 'at " + time.Now().String())
 	srv := httpServer.StartServer(port, handler)
@@ -103,11 +114,11 @@ func main() {
 	}
 }
 
-func initHandlers(connPool *pgx.ConnPool, amqpChannel *amqp.Channel, accessToken string) http.Handler {
-	downloader := dropbox.NewSDKDownloader(accessToken)
+func initHandlers(connPool *pgx.ConnPool, amqpChannel *amqp.Channel, dropboxAccessToken string, stripeSecretKey string, s3Client *s3.Client, bucket string) http.Handler {
+	downloader := dropbox.NewSDKDownloader(dropboxAccessToken)
 
 	pictureRepo := postgres.NewPictureRepository(connPool)
-	pictureService := picture.NewPictureService(pictureRepo, amqpChannel, downloader) //, svc, uploader, compressor
+	pictureService := picture.NewPictureService(pictureRepo, amqpChannel, downloader, s3Client, bucket) //, svc, uploader, compressor
 	pictureController := transport.NewPictureController(pictureService)
 
 	eventRepo := postgres.NewEventRepository(connPool)
@@ -116,13 +127,32 @@ func initHandlers(connPool *pgx.ConnPool, amqpChannel *amqp.Channel, accessToken
 
 	userRepo := postgres.NewUserRepository(connPool)
 	authService := auth.NewAuthService(userRepo)
+	userService := user.NewUserService(userRepo)
 	authController := transport.NewAuthController(authService)
 
 	tasksRepo := postgres.NewTasksRepositoryImpl(connPool)
 	tasksService := tasks.NewService(tasksRepo)
 	tasksController := transport.NewTasksController(tasksService)
 
-	return router.Router(pictureController, eventController, authController, tasksController)
+	orderRepo := postgres.NewOrderRepository(connPool)
+	stripeService := paySystem.NewStripeService(stripeSecretKey)
+	payService := paySystem.NewOrderService(orderRepo)
+	yookassaService, err := paySystem.NewYookassaService(54401, "test_Fh8hUAVVBGUGbjmlzba6TB0iyUbos_lueTHE-axOwM0")
+	if err != nil {
+		log.Fatal(err)
+		return nil
+	}
+
+	orderController := transport.NewOrderController(userService, payService, stripeService, yookassaService)
+
+	controllers := router.Controllers{
+		PictureController: pictureController,
+		EventsController:  eventController,
+		AuthController:    authController,
+		TasksController:   tasksController,
+		OrderController:   orderController,
+	}
+	return router.Router(controllers)
 }
 
 type Config struct {
@@ -133,8 +163,11 @@ type Config struct {
 	DbPassword         string
 	MaxConnections     int
 	AcquireTimeout     int
+	AwsS3Region        string
+	AwsS3Bucket        string
 	AmqpServerURL      string
 	DropboxAccessToken string
+	StripeSecretKey    string
 }
 
 func parseEnvString(key string, err error) (string, error) {
@@ -167,6 +200,9 @@ func ParseConfig() (*Config, error) {
 	acquireTimeout, err := parseEnvInt("DATABASE_ACQUIRE_TIMEOUT", err)
 	amqpServerUrl, err := parseEnvString("AMQP_SERVER_URL", err)
 	dropboxAccessToken, err := parseEnvString("DROPBOX_ACCESS_TOKEN", err)
+	stripeSecretKey, err := parseEnvString("STRIPE_SECRET_KEY", err)
+	awsS3Region, err := parseEnvString("AWS_S3_REGION", err)
+	awsS3Bucket, err := parseEnvString("AWS_S3_BUCKET", err)
 
 	if err != nil {
 		log.Info("error " + err.Error())
@@ -181,10 +217,11 @@ func ParseConfig() (*Config, error) {
 		dbPassword,
 		maxConnections,
 		acquireTimeout,
-		//awsS3Region,
-		//awsS3Bucket,
+		awsS3Region,
+		awsS3Bucket,
 		amqpServerUrl,
 		dropboxAccessToken,
+		stripeSecretKey,
 	}, nil
 }
 

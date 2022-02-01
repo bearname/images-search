@@ -79,3 +79,21 @@ type InitialImage struct {
 	EventId     int64
 	DropboxPath string
 }
+
+type PictureDTO struct {
+	Id      string
+	EventId int
+
+	TaskId string
+
+	DropboxPath  string
+	OriginalPath string
+	PreviewPath  string
+
+	Attempts         int
+	ProcessingStatus ProcessingStatus
+
+	IsOriginalSaved  bool
+	IsPreviewSaved   bool
+	IsTextRecognized bool
+}

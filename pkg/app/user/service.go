@@ -17,7 +17,7 @@ func NewUserService(userRepo user.Repository) *Service {
 	return s
 }
 
-func (s *Service) Find(usernameOrId string) (user.FindUserDto, error) {
+func (s *Service) Find(usernameOrId string) (*user.FindUserDto, error) {
 	var userObject user.User
 	var err error
 	uuid := util.IsUUID(usernameOrId)
@@ -28,10 +28,12 @@ func (s *Service) Find(usernameOrId string) (user.FindUserDto, error) {
 		userObject, err = s.userRepo.FindByUserName(usernameOrId)
 	}
 	if err != nil {
-		return user.FindUserDto{}, auth.ErrUserNotExist
+		return nil, auth.ErrUserNotExist
 	}
 
-	return user.FindUserDto{Username: usernameOrId,
-		Role: userObject.Role.Values(),
+	return &user.FindUserDto{
+		Id:       userObject.Id,
+		Username: usernameOrId,
+		Role:     userObject.Role.Values(),
 	}, nil
 }

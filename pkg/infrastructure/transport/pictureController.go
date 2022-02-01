@@ -102,15 +102,16 @@ func (c *PictureController) SearchPictures() func(http.ResponseWriter, *http.Req
 		confidence := 85
 		if len(confidenceParameter) != 0 {
 			confidence, err = strconv.Atoi(confidenceParameter)
+			msg := "Invalid 'confidence' query parameter. 'confidence' must be in range [0, 100]"
 			if err != nil {
 				log.Println(err)
-				log.Println("Invalid 'confidence' query parameter. 'confidence' must be in range [0, 100]")
-				http.Error(w, "Invalid 'confidence' query parameter. 'confidence' must be in range [0, 100]", http.StatusBadRequest)
+				log.Println(msg)
+				http.Error(w, msg, http.StatusBadRequest)
 				return
 			}
 			if confidence < 0 || confidence > 100 {
-				log.Println("Invalid 'confidence' query parameter. 'confidence' must be in range [0, 100]")
-				http.Error(w, "Invalid 'confidence' query parameter. 'confidence' must be in range [0, 100]", http.StatusBadRequest)
+				log.Println(msg)
+				http.Error(w, msg, http.StatusBadRequest)
 				return
 			}
 		}
@@ -118,15 +119,16 @@ func (c *PictureController) SearchPictures() func(http.ResponseWriter, *http.Req
 		limit := 20
 		if len(limitParameter) != 0 {
 			limit, err = strconv.Atoi(limitParameter)
+			msg := "Invalid 'limit' query parameter. 'limit' must be in range [0, 100]"
 			if err != nil {
 				log.Println(err)
-				log.Println("Invalid 'limit' query parameter. 'limit' must be in range [0, 100]")
-				http.Error(w, "Invalid 'limit' query parameter. 'limit' must be in range [0, 100]", http.StatusBadRequest)
+				log.Println(msg)
+				http.Error(w, msg, http.StatusBadRequest)
 				return
 			}
 			if limit < 0 || limit > 100 {
-				log.Println("Invalid 'limit' query parameter. 'limit' must be in range [0, 100]")
-				http.Error(w, "Invalid 'limit' query parameter. 'limit' must be in range [0, 100]", http.StatusBadRequest)
+				log.Println(msg)
+				http.Error(w, msg, http.StatusBadRequest)
 				return
 			}
 		}
@@ -134,15 +136,16 @@ func (c *PictureController) SearchPictures() func(http.ResponseWriter, *http.Req
 		offset := 0
 		if len(offsetParameter) != 0 {
 			offset, err = strconv.Atoi(offsetParameter)
+			msg := "Invalid 'offset' query parameter. 'offset' must be in range [0, 100]"
 			if err != nil {
 				log.Println(err)
-				log.Println("Invalid 'offset' query parameter. 'offset' must be in range [0, 100]")
-				http.Error(w, "Invalid 'offset' query parameter. 'offset' must be in range [0, 100]", http.StatusBadRequest)
+				log.Println(msg)
+				http.Error(w, msg, http.StatusBadRequest)
 				return
 			}
 			if offset < 0 {
-				log.Println("Invalid 'offset' query parameter. 'offset' must be in range [0, 100]")
-				http.Error(w, "Invalid 'offset' query parameter. 'offset' must be in range [0, 100]", http.StatusBadRequest)
+				log.Println(msg)
+				http.Error(w, msg, http.StatusBadRequest)
 				return
 			}
 		}
@@ -151,21 +154,22 @@ func (c *PictureController) SearchPictures() func(http.ResponseWriter, *http.Req
 		eventId := pictures.ValueNotSet
 		if len(eventIdParameter) != 0 {
 			eventId, err = strconv.Atoi(eventIdParameter)
+			msg := "Invalid 'eventId' query parameter. 'eventId' must be in range [0, 100]"
 			if err != nil {
 				log.Println(err)
-				log.Println("Invalid 'eventId' query parameter. 'offset' must be in range [0, 100]")
-				http.Error(w, "Invalid 'offset' query parameter. 'offset' must be in range [0, 100]", http.StatusBadRequest)
+				log.Println(msg)
+				http.Error(w, msg, http.StatusBadRequest)
 				return
 			}
 			if eventId < 0 {
-				log.Println("Invalid 'eventId' query parameter. 'eventId' must be more than 0")
-				http.Error(w, "Invalid 'eventId' query parameter. 'eventId' must be more than 0", http.StatusBadRequest)
+				log.Println(msg)
+				http.Error(w, msg, http.StatusBadRequest)
 				return
 			}
 		}
 
 		searchDTO := pictures.NewSearchPictureDto(participantNumber, confidence, eventId, dto.Page{Limit: limit, Offset: offset})
-		searchDto, err := c.service.Search(searchDTO)
+		searchDto, err := c.service.Search(&searchDTO)
 		if err != nil {
 			fmt.Println(err.Error())
 			log.Println(err)

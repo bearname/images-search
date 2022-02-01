@@ -78,7 +78,7 @@ func main() {
 	}
 	client := s3.NewFromConfig(cfg)
 	uploader := manager.NewUploader(client)
-	connector, err := db.GetConnector(dbDSN, maxConnections, acquireTimeout)
+	connector, err := db.GetDBConfig(dbDSN, maxConnections, acquireTimeout)
 
 	if err != nil {
 		log.Fatal(err.Error())
@@ -90,7 +90,6 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	//fmt.Println(uploader)
 	downloader := dropbox.NewSDKDownloader(accessToken)
 	//awsS3Uploader := s32.NewMockUploader()
 	awsS3Uploader := s32.NewAwsS3Uploader(uploader, awsBucket)
@@ -129,7 +128,6 @@ func main() {
 
 	cron(5*time.Minute, func() error {
 		defer wg.Done()
-		//for {
 		ch = make(chan pictures.Picture)
 		pictureList, err := getUnhandledPictures(pool, sql, ch)
 		if err != nil {
@@ -219,13 +217,11 @@ func handleImageAsync(ch chan pictures.Picture, wg *sync.WaitGroup, pictureCoord
 	fmt.Println(len(ch))
 
 	for img := range ch {
-		//fmt.Println(img)
 		err := pictureCoordinator.PerformAddImage(&img)
 		if err != nil {
 			log.Println("error", err)
 		} else {
 			fmt.Println("success")
-			//fmt.Println(img)
 		}
 
 		rw.Lock()

@@ -108,38 +108,41 @@ func (c *EventController) List() func(http.ResponseWriter, *http.Request) {
 		query := r.URL.Query()
 		limitParameter := query.Get("limit")
 		limit := 20
+		var err error
 		if len(limitParameter) != 0 {
-			limit, err := strconv.Atoi(limitParameter)
+			limit, err = strconv.Atoi(limitParameter)
+			msg := "Invalid 'limit' query parameter. 'limit' must be in range [0, 100]"
 			if err != nil {
 				log.Println(err)
-				log.Println("Invalid 'limit' query parameter. 'limit' must be in range [0, 100]")
-				http.Error(w, "Invalid 'limit' query parameter. 'limit' must be in range [0, 100]", http.StatusBadRequest)
+				log.Println(msg)
+				http.Error(w, msg, http.StatusBadRequest)
 				return
 			}
 			if limit < 0 || limit > 100 {
-				log.Println("Invalid 'limit' query parameter. 'limit' must be in range [0, 100]")
-				http.Error(w, "Invalid 'limit' query parameter. 'limit' must be in range [0, 100]", http.StatusBadRequest)
+				log.Println(msg)
+				http.Error(w, msg, http.StatusBadRequest)
 				return
 			}
 		}
 		offsetParameter := query.Get("offset")
 		offset := 0
 		if len(offsetParameter) != 0 {
-			offset, err := strconv.Atoi(offsetParameter)
+			offset, err = strconv.Atoi(offsetParameter)
+			msg := "Invalid 'offset' query parameter. 'offset' must be in range [0, 100]"
 			if err != nil {
 				log.Println(err)
-				log.Println("Invalid 'offset' query parameter. 'offset' must be in range [0, 100]")
-				http.Error(w, "Invalid 'offset' query parameter. 'offset' must be in range [0, 100]", http.StatusBadRequest)
+				log.Println(msg)
+				http.Error(w, msg, http.StatusBadRequest)
 				return
 			}
 			if offset < 0 {
-				log.Println("Invalid 'offset' query parameter. 'offset' must be in range [0, 100]")
-				http.Error(w, "Invalid 'offset' query parameter. 'offset' must be in range [0, 100]", http.StatusBadRequest)
+				log.Println(msg)
+				http.Error(w, msg, http.StatusBadRequest)
 				return
 			}
 		}
 
-		events, err := c.service.Search(dto.Page{Offset: offset, Limit: limit})
+		events, err := c.service.Search(&dto.Page{Offset: offset, Limit: limit})
 		if err != nil {
 			fmt.Println(err.Error())
 			log.Println(err)

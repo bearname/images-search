@@ -12,7 +12,7 @@ func GetUrl(DbUser string, DbPassword string, DbAddress string, DbName string) s
 	return "postgres://" + DbUser + ":" + DbPassword + "@" + DbAddress + "/" + DbName + "?sslMode=false"
 }
 
-func GetConnector(databaseUri string, maxConnections int, acquireTimeout int) (pgx.ConnPoolConfig, error) {
+func GetDBConfig(databaseUri string, maxConnections int, acquireTimeout int) (pgx.ConnPoolConfig, error) {
 	log.Info("databaseUri: " + databaseUri)
 	pgxConnConfig, err := pgx.ParseURI(databaseUri)
 	if err != nil {

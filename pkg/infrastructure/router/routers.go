@@ -8,15 +8,35 @@ import (
 	"photofinish/pkg/infrastructure/transport"
 )
 
-func Router(pictureController *transport.PictureController, eventsController *transport.EventController, authController *transport.AuthController, tasksController *transport.TasksController) http.Handler {
+type Controllers struct {
+	PictureController *transport.PictureController
+	EventsController  *transport.EventController
+	AuthController    *transport.AuthController
+	TasksController   *transport.TasksController
+	OrderController   *transport.OrderController
+}
 
+func Router(controllers Controllers) http.Handler {
+	tasksController := controllers.TasksController
+	authController := controllers.AuthController
+	eventsController := controllers.EventsController
+	pictureController := controllers.PictureController
+	orderController := controllers.OrderController
 	router := mux.NewRouter()
 
 	router.HandleFunc("/health", healthCheckHandler).Methods(http.MethodGet)
 	router.HandleFunc("/ready", readyCheckHandler).Methods(http.MethodGet)
 
+	router.HandleFunc("/webhook", orderController.OnEventStripe()).Methods(http.MethodPost, http.MethodOptions)
+
 	apiV1Route := router.PathPrefix("/api/v1").Subrouter()
-	apiV1Route.HandleFunc("/tasks/{id}/stats", authController.CheckTokenHandler(tasksController.GetStatistic())).Methods(http.MethodGet, http.MethodOptions)
+	apiV1Route.HandleFunc("/yookassa", orderController.OnEventYookassa()).Methods(http.MethodGet, http.MethodOptions)
+	apiV1Route.HandleFunc("/orders/{id}", authController.CheckTokenHandler(orderController.GetOrder())).Methods(http.MethodGet, http.MethodOptions)
+
+	apiV1Route.HandleFunc("/tasks/{id}/stats", authController.CheckTokenHandler(tasksController.GetTaskStatistic())).Methods(http.MethodGet, http.MethodOptions)
+	apiV1Route.HandleFunc("/tasks", authController.CheckTokenHandler(tasksController.GetTaskList())).Methods(http.MethodGet, http.MethodOptions)
+
+	apiV1Route.HandleFunc("/charges", authController.CheckTokenHandler(orderController.Pay())).Methods(http.MethodPost, http.MethodOptions)
 
 	apiV1Route.HandleFunc("/events", authController.CheckTokenHandler(eventsController.List())).Methods(http.MethodGet, http.MethodOptions)
 	apiV1Route.HandleFunc("/events", authController.CheckTokenHandler(eventsController.CreateEvent())).Methods(http.MethodPost, http.MethodOptions)

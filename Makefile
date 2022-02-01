@@ -61,4 +61,7 @@ stripeTrigger:
 stripeForward:
 	stripe listen --forward-to http://localhost:8000/webhook
 
+runNgrok:
+	ngrok http -bind-tls=true localhost:8000
+
 all: download buildFront build

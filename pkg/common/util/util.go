@@ -3,9 +3,13 @@ package util
 import (
 	"encoding/base64"
 	"flag"
+	"fmt"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
+	"net"
+	"os"
 	"regexp"
+	"strconv"
 )
 
 func ImageBase64(buf []byte) ([]byte, error) {
@@ -36,7 +40,35 @@ func LoadEnvFileIfNeeded() {
 	}
 }
 
+func ParseEnvString(key string, err error) (string, error) {
+	if err != nil {
+		return "", err
+	}
+	str, ok := os.LookupEnv(key)
+	if !ok {
+		return "", fmt.Errorf("undefined environment variable %v", key)
+	}
+	return str, nil
+}
+
+func ParseEnvInt(key string, err error) (int, error) {
+	s, err := ParseEnvString(key, err)
+	if err != nil {
+		return 0, err
+	}
+	return strconv.Atoi(s)
+}
+
 func IsUUID(uuid string) bool {
 	r := regexp.MustCompile("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$")
 	return r.MatchString(uuid)
+}
+
+func GetRemoteIp(remoteAddr string) (string, error) {
+	ip, _, err := net.SplitHostPort(remoteAddr)
+	if err != nil {
+		return "", err
+	}
+	fmt.Println("ip", ip)
+	return ip, err
 }

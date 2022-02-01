@@ -2,6 +2,7 @@ package picture
 
 import (
 	"encoding/json"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"photofinish/pkg/app/dropbox"
@@ -14,13 +15,17 @@ type ServiceImpl struct {
 	pictureRepo *postgres.PictureRepositoryImpl
 	amqpChannel *amqp.Channel
 	downloader  *dropbox.SDKDownloader
+	s3Client    *s3.Client
+	bucket      string
 }
 
-func NewPictureService(pictureRepo *postgres.PictureRepositoryImpl, amqpChannel *amqp.Channel, downloader *dropbox.SDKDownloader) *ServiceImpl {
+func NewPictureService(pictureRepo *postgres.PictureRepositoryImpl, amqpChannel *amqp.Channel, downloader *dropbox.SDKDownloader, s3Client *s3.Client, bucket string) *ServiceImpl {
 	s := new(ServiceImpl)
 	s.pictureRepo = pictureRepo
 	s.amqpChannel = amqpChannel
 	s.downloader = downloader
+	s.s3Client = s3Client
+	s.bucket = bucket
 	return s
 }
 
@@ -37,7 +42,7 @@ func (s *ServiceImpl) DetectImageFromUrl(dropboxPath string, eventId int) (*pict
 	image := pictures.InitialDropboxImage{
 		Images: images, EventId: eventId, Path: dropboxPath,
 	}
-	result, err := (*s.pictureRepo).SaveInitialPictures(image)
+	result, err := (*s.pictureRepo).SaveInitialPictures(&image)
 
 	if err != nil {
 		return nil, err
@@ -118,10 +123,9 @@ func (s *ServiceImpl) DetectImageFromUrl(dropboxPath string, eventId int) (*pict
 		CountAllImages:  len(images),
 		CompletedImages: 0,
 	}, rabbitmq.Publish(s.amqpChannel, rabbitmq.TargetQueue, message)
-	//return nil
 }
 
-func (s *ServiceImpl) Search(dto pictures.SearchPictureDto) (pictures.SearchPictureResultDto, error) {
+func (s *ServiceImpl) Search(dto *pictures.SearchPictureDto) (*pictures.SearchPictureResultDto, error) {
 	return (*s.pictureRepo).Search(dto)
 }
 
@@ -133,7 +137,7 @@ func (s *ServiceImpl) Delete(pictureId string) error {
 	err := (*s.pictureRepo).IsExists(pictureId)
 	if err != nil {
 		log.Error(err)
-		return err
+		return pictures.ErrNotFound
 	}
 
 	// TODO
