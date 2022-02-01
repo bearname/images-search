@@ -7,5 +7,4 @@ import (
 type Downloader interface {
 	GetListFolder(path string, recursive bool, isNeedFile bool) ([]string, error)
 	DownloadFile(path string) (*files.FileMetadata, *[]byte, error)
-	// DownloadZip(url string) error
 }

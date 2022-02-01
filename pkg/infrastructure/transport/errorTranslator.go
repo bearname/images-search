@@ -3,112 +3,68 @@ package transport
 import (
 	"errors"
 	"net/http"
+	"photofinish/pkg/app/dropbox"
 	"photofinish/pkg/domain/auth"
+	"photofinish/pkg/domain/pictures"
 )
 
-func TranslateError(err error) Error {
-	if errors.Is(err, ErrBadRouting) {
-		return Error{
-			Status: http.StatusNotFound,
-			Response: responseWithoutData{
-				Code:    100,
-				Message: err.Error(),
-			},
-		}
-	} else if errors.Is(err, ErrBadRequest) {
-		return Error{
-			Status: http.StatusBadRequest,
-			Response: responseWithoutData{
-				Code:    101,
-				Message: err.Error(),
-			},
-		}
-	} else if errors.Is(err, auth.ErrUserNotExist) {
-		return Error{
-			Status: http.StatusNotFound,
-			Response: responseWithoutData{
-				Code:    102,
-				Message: err.Error(),
-			},
-		}
-	} else if errors.Is(err, auth.ErrInvalidAuthorizationHeader) {
-		return Error{
-			Status: http.StatusBadRequest,
-			Response: responseWithoutData{
-				Code:    103,
-				Message: err.Error(),
-			},
-		}
-	} else if errors.Is(err, auth.ErrInvalidAccessToken) {
-		return Error{
-			Status: http.StatusUnauthorized,
-			Response: responseWithoutData{
-				Code:    104,
-				Message: err.Error(),
-			},
-		}
-	} else if errors.Is(err, auth.ErrInvalidRefreshToken) {
-		return Error{
-			Status: http.StatusUnauthorized,
-			Response: responseWithoutData{
-				Code:    105,
-				Message: err.Error(),
-			},
-		}
-	} else if errors.Is(err, auth.ErrFailedCreateAccessToken) {
-		return Error{
-			Status: http.StatusInternalServerError,
-			Response: responseWithoutData{
-				Code:    106,
-				Message: err.Error(),
-			},
-		}
-	} else if errors.Is(err, auth.ErrFailedUpdateAccessToken) {
-		return Error{
-			Status: http.StatusInternalServerError,
-			Response: responseWithoutData{
-				Code:    107,
-				Message: err.Error(),
-			},
-		}
-	} else if errors.Is(err, auth.ErrFailedSaveUser) {
-		return Error{
-			Status: http.StatusInternalServerError,
-			Response: responseWithoutData{
-				Code:    108,
-				Message: err.Error(),
-			},
-		}
-	} else if errors.Is(err, auth.ErrFailedCreateUserID) {
-		return Error{
-			Status: http.StatusInternalServerError,
-			Response: responseWithoutData{
-				Code:    109,
-				Message: err.Error(),
-			},
-		}
-	} else if errors.Is(err, auth.ErrDuplicateUser) {
-		return Error{
-			Status: http.StatusConflict,
-			Response: responseWithoutData{
-				Code:    110,
-				Message: err.Error(),
-			},
-		}
-	} else if errors.Is(err, auth.ErrWrongPassword) {
-		return Error{
-			Status: http.StatusUnauthorized,
-			Response: responseWithoutData{
-				Code:    111,
-				Message: err.Error(),
-			},
+var ErrUnexpected = errors.New("unexpected error")
+
+func TranslateError(err error) *Error {
+	if errorIs(err, ErrBadRouting) {
+		return NewError(http.StatusNotFound, 100, err)
+	} else if errorIs(err, ErrBadRequest) {
+		return NewError(http.StatusBadRequest, 101, err)
+	} else {
+		e, isAuthError := tryTranslateAuthError(err)
+		if isAuthError {
+			return e
+		} else if errorIs(err, pictures.ErrNotFound) {
+			return NewError(http.StatusNotFound, 112, err)
+		} else if errorIs(err, pictures.ErrEmptyImages) {
+			return NewError(http.StatusNotFound, 113, err)
+		} else if errorIs(err, pictures.ErrUnsupportedType) {
+			return NewError(http.StatusBadRequest, 114, err)
+		} else if errorIs(err, pictures.ErrFailedScale) {
+			return NewError(http.StatusBadRequest, 114, err)
+		} else {
+			switch err.(type) {
+			case *dropbox.ErrFailedGetListDropbox:
+				return NewError(http.StatusBadRequest, 115, err)
+			case *dropbox.ErrFailedDownloadDropbox:
+				return NewError(http.StatusBadRequest, 116, err)
+			}
 		}
 	}
-	return Error{
-		Status: http.StatusInternalServerError,
-		Response: responseWithoutData{
-			Code:    100,
-			Message: "unexpected error",
-		},
+
+	return NewError(http.StatusInternalServerError, 100, ErrUnexpected)
+}
+
+func errorIs(err, target error) bool {
+	return errors.Is(err, target)
+}
+
+func tryTranslateAuthError(err error) (*Error, bool) {
+	if errorIs(err, auth.ErrUserNotExist) {
+		return NewError(http.StatusNotFound, 102, err), true
+	} else if errorIs(err, auth.ErrInvalidAuthorizationHeader) {
+		return NewError(http.StatusBadRequest, 103, err), true
+	} else if errorIs(err, auth.ErrInvalidAccessToken) {
+		return NewError(http.StatusUnauthorized, 104, err), true
+	} else if errorIs(err, auth.ErrInvalidRefreshToken) {
+		return NewError(http.StatusUnauthorized, 105, err), true
+	} else if errorIs(err, auth.ErrFailedCreateAccessToken) {
+		return NewError(http.StatusInternalServerError, 106, err), true
+	} else if errorIs(err, auth.ErrFailedUpdateAccessToken) {
+		return NewError(http.StatusInternalServerError, 107, err), true
+	} else if errorIs(err, auth.ErrFailedSaveUser) {
+		return NewError(http.StatusInternalServerError, 108, err), true
+	} else if errorIs(err, auth.ErrFailedCreateUserID) {
+		return NewError(http.StatusInternalServerError, 108, err), true
+	} else if errorIs(err, auth.ErrDuplicateUser) {
+		return NewError(http.StatusConflict, 110, err), true
+	} else if errorIs(err, auth.ErrWrongPassword) {
+		return NewError(http.StatusUnauthorized, 111, err), true
 	}
+	return nil, false
 }

@@ -54,8 +54,7 @@ func (c *PictureController) DetectImageFromDropboxUrl() func(http.ResponseWriter
 
 		taskResp, err := c.service.DetectImageFromUrl(dropboxUrl, eventId)
 		if err != nil {
-			log.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			c.BaseController.WriteError(w, err, TranslateError(err))
 			return
 		}
 

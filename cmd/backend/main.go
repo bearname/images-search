@@ -38,17 +38,8 @@ func main() {
 	util.LoadEnvFileIfNeeded()
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	log.SetFormatter(&log.JSONFormatter{})
-	file, err := os.OpenFile("short.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-	if err == nil {
-		log.SetOutput(file)
-		defer func(file *os.File) {
-			err = file.Close()
-			if err != nil {
-				log.Error(err)
-			}
-		}(file)
-	}
+
+	util.LogToFileIfNeeded()
 
 	c, err := ParseConfig()
 	if err != nil {
@@ -152,7 +143,7 @@ func initHandlers(connPool *pgx.ConnPool, amqpChannel *amqp.Channel, dropboxAcce
 		TasksController:   tasksController,
 		OrderController:   orderController,
 	}
-	return router.Router(controllers)
+	return router.Router(&controllers)
 }
 
 type Config struct {

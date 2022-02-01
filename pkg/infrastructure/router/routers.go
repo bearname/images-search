@@ -16,42 +16,72 @@ type Controllers struct {
 	OrderController   *transport.OrderController
 }
 
-func Router(controllers Controllers) http.Handler {
-	tasksController := controllers.TasksController
-	authController := controllers.AuthController
-	eventsController := controllers.EventsController
-	pictureController := controllers.PictureController
-	orderController := controllers.OrderController
+func Router(controllers *Controllers) http.Handler {
 	router := mux.NewRouter()
+	orderController := controllers.OrderController
+
+	postReq := []string{http.MethodPost, http.MethodOptions}
 
 	router.HandleFunc("/health", healthCheckHandler).Methods(http.MethodGet)
 	router.HandleFunc("/ready", readyCheckHandler).Methods(http.MethodGet)
 
-	router.HandleFunc("/webhook", orderController.OnEventStripe()).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/webhook", orderController.OnEventStripe()).Methods(postReq...)
 
 	apiV1Route := router.PathPrefix("/api/v1").Subrouter()
-	apiV1Route.HandleFunc("/yookassa", orderController.OnEventYookassa()).Methods(http.MethodGet, http.MethodOptions)
-	apiV1Route.HandleFunc("/orders/{id}", authController.CheckTokenHandler(orderController.GetOrder())).Methods(http.MethodGet, http.MethodOptions)
 
-	apiV1Route.HandleFunc("/tasks/{id}/stats", authController.CheckTokenHandler(tasksController.GetTaskStatistic())).Methods(http.MethodGet, http.MethodOptions)
-	apiV1Route.HandleFunc("/tasks", authController.CheckTokenHandler(tasksController.GetTaskList())).Methods(http.MethodGet, http.MethodOptions)
+	for _, h := range routeList(controllers) {
+		apiV1Route.HandleFunc(h.Path, h.Func).Methods(h.Methods...)
+	}
 
-	apiV1Route.HandleFunc("/charges", authController.CheckTokenHandler(orderController.Pay())).Methods(http.MethodPost, http.MethodOptions)
-
-	apiV1Route.HandleFunc("/events", authController.CheckTokenHandler(eventsController.List())).Methods(http.MethodGet, http.MethodOptions)
-	apiV1Route.HandleFunc("/events", authController.CheckTokenHandler(eventsController.CreateEvent())).Methods(http.MethodPost, http.MethodOptions)
-	apiV1Route.HandleFunc("/events/{id}", authController.CheckTokenHandler(eventsController.DeleteEvent())).Methods(http.MethodDelete, http.MethodOptions)
-
-	apiV1Route.HandleFunc("/pictures/search", pictureController.SearchPictures()).Methods(http.MethodGet, http.MethodOptions)
-	apiV1Route.HandleFunc("/pictures/dropbox-folders", authController.CheckTokenHandler(pictureController.GetDropboxFolders())).Methods(http.MethodGet, http.MethodOptions)
-	apiV1Route.HandleFunc("/pictures/detectText/dropbox", authController.CheckTokenHandler(pictureController.DetectImageFromDropboxUrl())).Methods(http.MethodPost, http.MethodOptions)
-	apiV1Route.HandleFunc("/pictures/{id}", authController.CheckTokenHandler(pictureController.DeletePicture())).Methods(http.MethodDelete, http.MethodOptions)
-
-	apiV1Route.HandleFunc("/auth/login", authController.Login).Methods(http.MethodPost, http.MethodOptions)
-	apiV1Route.HandleFunc("/auth/token", authController.CheckTokenHandler(authController.RefreshToken)).Methods(http.MethodGet, http.MethodOptions)
-	apiV1Route.HandleFunc("/auth/token/validate", authController.ValidateToken).Methods(http.MethodGet, http.MethodOptions)
 	router.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("web"))))
 	return logMiddleware(router)
+}
+
+func routeList(controllers *Controllers) []*handleFunc {
+	tasksCntrl := controllers.TasksController
+	auth := controllers.AuthController
+	eventsCntrl := controllers.EventsController
+	pictureCntrl := controllers.PictureController
+	orderCntrl := controllers.OrderController
+
+	getReq := []string{http.MethodGet, http.MethodOptions}
+	postReq := []string{http.MethodPost, http.MethodOptions}
+	delReq := []string{http.MethodDelete, http.MethodOptions}
+
+	return []*handleFunc{
+		newHandleFunc("/yookassa", getReq, orderCntrl.OnEventYookassa()),
+		newHandleFunc("/charges", postReq, withAuth(auth, orderCntrl.Pay())),
+
+		newHandleFunc("/orders/{id}", getReq, withAuth(auth, orderCntrl.GetOrder())),
+
+		newHandleFunc("/tasks/{id}/stats", getReq, withAuth(auth, tasksCntrl.GetTaskStatistic())),
+		newHandleFunc("/tasks", getReq, withAuth(auth, tasksCntrl.GetTaskList())),
+
+		newHandleFunc("/events", getReq, withAuth(auth, eventsCntrl.List())),
+		newHandleFunc("/events/{id}", delReq, withAuth(auth, eventsCntrl.DeleteEvent())),
+
+		newHandleFunc("/pictures/search", getReq, pictureCntrl.SearchPictures()),
+		newHandleFunc("/pictures/dropbox-folders", getReq, withAuth(auth, pictureCntrl.GetDropboxFolders())),
+		newHandleFunc("/pictures/detectText/dropbox", postReq, withAuth(auth, pictureCntrl.DetectImageFromDropboxUrl())),
+		newHandleFunc("/pictures/{id}", delReq, withAuth(auth, pictureCntrl.DeletePicture())),
+
+		newHandleFunc("/auth/login", postReq, auth.Login),
+		newHandleFunc("/auth/token", getReq, withAuth(auth, auth.RefreshToken)),
+		newHandleFunc("/auth/token/validate", getReq, auth.ValidateToken),
+	}
+}
+func withAuth(authController *transport.AuthController, next http.HandlerFunc) http.HandlerFunc {
+	return authController.CheckTokenHandler(next)
+}
+
+type handleFunc struct {
+	Path    string
+	Methods []string
+	Func    func(http.ResponseWriter, *http.Request)
+}
+
+func newHandleFunc(path string, methods []string, f func(http.ResponseWriter, *http.Request)) *handleFunc {
+	return &handleFunc{Path: path, Methods: methods, Func: f}
 }
 
 func healthCheckHandler(w http.ResponseWriter, _ *http.Request) {

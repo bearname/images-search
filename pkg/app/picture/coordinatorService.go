@@ -94,7 +94,6 @@ func (c *CoordinatorServiceImpl) PerformAddImage(image *pictures.Picture) error 
 
 		extension, err := c.getExtension(image.DropboxPath)
 		if err != nil {
-			err = pictures.ErrFailedScale
 			c.handleError(image, err)
 			return err
 		}

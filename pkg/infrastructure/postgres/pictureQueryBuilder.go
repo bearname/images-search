@@ -184,7 +184,7 @@ func (s *pictureQueryBuilder) buildSaveInitialPictureQuery(image *pictures.Initi
 		data: data, sql: sql,
 	}
 }
-func (s *pictureQueryBuilder) buildSearchQuery(dto *pictures.SearchPictureDto) (*searchQuery, error) {
+func (s *pictureQueryBuilder) buildSearchQuery(dto *pictures.SearchPictureDto) *searchQuery {
 	var data []interface{}
 	i := 1
 
@@ -241,5 +241,5 @@ func (s *pictureQueryBuilder) buildSearchQuery(dto *pictures.SearchPictureDto) (
 		CountQuery:    query{sql: sqlCount, data: dataWhere},
 		PicturesQuery: query{sql: sql, data: data},
 		OnlyEventId:   onlyEventId,
-	}, nil
+	}
 }

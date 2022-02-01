@@ -8,6 +8,5 @@ type Repository interface {
 	SaveInitialPictures(image *InitialDropboxImage) (*InitialDropboxImageResult, error)
 	UpdateImageHandle(picture *Picture) error
 	Store(imageTextDetectionDto *TextDetectionOnImageDto) error
-	StoreAll(pictures []*TextDetectionOnImageDto) error
 	Delete(imageId string) error
 }

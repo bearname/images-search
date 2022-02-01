@@ -5,4 +5,4 @@ COPY ./dist ./app/bin/web
 RUN chmod +x /app/bin/liberatorBlockedWorker
 WORKDIR /app
 RUN apk --no-cache add ca-certificates
-CMD ["/app/bin/liberatorBlockedWorker", "-d", "false"]
+CMD ["/app/bin/liberatorBlockedWorker", "-d", "false", "-log", "false"]

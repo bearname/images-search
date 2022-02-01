@@ -40,14 +40,20 @@ func (r *PictureRepositoryImpl) IsExists(pictureId string) error {
 }
 
 func (r *PictureRepositoryImpl) FindPicture(pictureId string) (*pictures.PictureDTO, error) {
-	sql := `SELECT id, eventid, task_id, dropbox_path, 
-       original_s3_id, original_path, preview_s3_id, preview_path, attempts, 
-       processing_status, is_original_saved,
-       is_preview_saved, is_text_recognized FROM pictures
-WHERE id = $1`
+	sql := r.getFindPictureSql()
 	var data []interface{}
 	data = append(data, pictureId)
-	i, err := db.Query(r.connPool, sql, data, func(rows *pgx.Rows) (interface{}, error) {
+	i, err := db.Query(r.connPool, sql, data, r.scanPicture())
+	if err != nil {
+		return nil, err
+	}
+	dto := i.(pictures.PictureDTO)
+
+	return &dto, nil
+}
+
+func (r *PictureRepositoryImpl) scanPicture() func(rows *pgx.Rows) (interface{}, error) {
+	return func(rows *pgx.Rows) (interface{}, error) {
 		if !rows.Next() {
 			return nil, pictures.ErrNotFound
 		}
@@ -69,24 +75,23 @@ WHERE id = $1`
 			return nil, err
 		}
 		return &dto, nil
-	})
-	if err != nil {
-		return nil, err
 	}
-	dto := i.(pictures.PictureDTO)
+}
 
-	return &dto, nil
+func (r *PictureRepositoryImpl) getFindPictureSql() string {
+	return `SELECT id, eventid, task_id, dropbox_path, 
+       original_s3_id, original_path, preview_s3_id, preview_path, attempts, 
+       processing_status, is_original_saved,
+       is_preview_saved, is_text_recognized FROM pictures
+WHERE id = $1`
 }
 
 func (r *PictureRepositoryImpl) Search(dto *pictures.SearchPictureDto) (*pictures.SearchPictureResultDto, error) {
-	queryDTO, err := r.queryBuilder.buildSearchQuery(dto)
-	if err != nil {
-		return nil, err
-	}
+	queryDTO := r.queryBuilder.buildSearchQuery(dto)
 
 	var result pictures.SearchPictureResultDto
 
-	i, err := db.Query(r.connPool, queryDTO.CountQuery.sql, queryDTO.CountQuery.data, r.scanCountSearchImages(err))
+	i, err := db.Query(r.connPool, queryDTO.CountQuery.sql, queryDTO.CountQuery.data, r.scanCountSearchImages())
 	if err != nil {
 		return nil, err
 	}
@@ -180,11 +185,11 @@ func (r *PictureRepositoryImpl) Delete(imageId string) error {
 	return err
 }
 
-func (r *PictureRepositoryImpl) scanCountSearchImages(err error) func(rows *pgx.Rows) (interface{}, error) {
+func (r *PictureRepositoryImpl) scanCountSearchImages() func(rows *pgx.Rows) (interface{}, error) {
 	return func(rows *pgx.Rows) (interface{}, error) {
 		var count int
 		if rows.Next() {
-			err = rows.Scan(&count)
+			err := rows.Scan(&count)
 			if err != nil {
 				return nil, err
 			}
@@ -216,15 +221,15 @@ func (r *PictureRepositoryImpl) scanSearchQueryResult(queryDTO *searchQuery) fun
 	}
 }
 
-func (r *PictureRepositoryImpl) buildDetectedText(textDetection string) (pictures.TextDetectionDto, error) {
+func (r *PictureRepositoryImpl) buildDetectedText(textDetection string) (*pictures.TextDetectionDto, error) {
 	item := strings.Split(textDetection, ":")
 	confidence, err := strconv.ParseFloat(item[1], 64)
 	if err != nil {
-		return pictures.TextDetectionDto{}, err
+		return nil, err
 	}
 	eventId, err := strconv.ParseInt(item[2], 10, 64)
 	if err != nil {
-		return pictures.TextDetectionDto{}, err
+		return nil, err
 	}
 	detectionDto := pictures.TextDetectionDto{
 		TextDetection: pictures.TextDetection{
@@ -236,7 +241,7 @@ func (r *PictureRepositoryImpl) buildDetectedText(textDetection string) (picture
 			EventName: item[3],
 		},
 	}
-	return detectionDto, nil
+	return &detectionDto, nil
 }
 
 func (r *PictureRepositoryImpl) buildTextDetectionList(rows *pgx.Rows, onlyEventId bool) (*[]pictures.TextDetectionDto, error) {
@@ -271,13 +276,13 @@ func (r *PictureRepositoryImpl) buildTextDetectionList(rows *pgx.Rows, onlyEvent
 		}
 		if len(textDetectionsString) > 0 {
 			textDetectionItem := strings.Split(textDetectionsString, ",")
-			var detectionDto pictures.TextDetectionDto
+			var detectionDto *pictures.TextDetectionDto
 			for _, textDetection := range textDetectionItem {
 				detectionDto, err = r.buildDetectedText(textDetection)
 				if err != nil {
 					return nil, err
 				}
-				arr = append(arr, detectionDto)
+				arr = append(arr, *detectionDto)
 			}
 		} else {
 			arr = make([]pictures.TextDetectionDto, 0)

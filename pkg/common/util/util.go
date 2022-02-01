@@ -38,6 +38,24 @@ func LoadEnvFileIfNeeded() {
 		}
 	}
 }
+func LogToFileIfNeeded() {
+	log.SetFormatter(&log.JSONFormatter{})
+	var isNeedFileLog string
+	flag.StringVar(&isNeedFileLog, "log", "true", "is need load .env file")
+	flag.Parse()
+	if isNeedFileLog == "false" {
+		file, err := os.OpenFile("short.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 6444)
+		if err == nil {
+			log.SetOutput(file)
+			defer func(file *os.File) {
+				err = file.Close()
+				if err != nil {
+					log.Error(err)
+				}
+			}(file)
+		}
+	}
+}
 
 func ParseEnvString(key string, err error) (string, error) {
 	if err != nil {

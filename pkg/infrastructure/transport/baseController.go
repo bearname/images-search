@@ -15,7 +15,7 @@ var (
 type BaseController struct {
 }
 
-func (c *BaseController) WriteError(w http.ResponseWriter, err error, responseError Error) {
+func (c *BaseController) WriteError(w http.ResponseWriter, err error, responseError *Error) {
 	log.Error(err.Error())
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(responseError.Status)

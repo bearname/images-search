@@ -15,3 +15,13 @@ type Error struct {
 	Status   int
 	Response responseWithoutData
 }
+
+func NewError(status, code int, err error) *Error {
+	return &Error{
+		Status: status,
+		Response: responseWithoutData{
+			Code:    uint32(code),
+			Message: err.Error(),
+		},
+	}
+}

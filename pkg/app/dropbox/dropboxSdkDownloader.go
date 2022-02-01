@@ -1,6 +1,7 @@
 package dropbox
 
 import (
+	"fmt"
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox"
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox/files"
 	log "github.com/sirupsen/logrus"
@@ -8,6 +9,9 @@ import (
 	"io/ioutil"
 )
 
+type APIError struct {
+	ErrorSummary string `json:"error_summary"`
+}
 type SDKDownloader struct {
 	dbx files.Client
 }
@@ -30,6 +34,21 @@ func NewSDKDownloader(accessToken string) *SDKDownloader {
 	return s
 }
 
+type ErrFailedGetListDropbox struct {
+	Err error
+}
+
+func (e *ErrFailedGetListDropbox) Error() string {
+	return e.Err.Error()
+}
+
+type ErrFailedDownloadDropbox struct {
+	Err error
+}
+
+func (e *ErrFailedDownloadDropbox) Error() string {
+	return e.Err.Error()
+}
 func (s *SDKDownloader) GetListFolder(path string, recursive bool, isNeedFile bool) ([]string, error) {
 	folder, err := s.dbx.ListFolder(&files.ListFolderArg{
 		Path:      path,
@@ -37,7 +56,7 @@ func (s *SDKDownloader) GetListFolder(path string, recursive bool, isNeedFile bo
 	})
 	if err != nil {
 		log.Println(err)
-		return nil, err
+		return nil, &ErrFailedGetListDropbox{Err: err}
 	}
 	var fileList []string
 
@@ -51,7 +70,7 @@ func (s *SDKDownloader) GetListFolder(path string, recursive bool, isNeedFile bo
 		})
 		if err != nil {
 			log.Println(err)
-			return fileList, err
+			return fileList, &ErrFailedGetListDropbox{Err: err}
 		}
 		hasMore = folder.HasMore
 		cursor = folder.Cursor
@@ -61,6 +80,7 @@ func (s *SDKDownloader) GetListFolder(path string, recursive bool, isNeedFile bo
 
 	return fileList, nil
 }
+
 func (s *SDKDownloader) fillResult(fileList []string, folder *files.ListFolderResult, isFile bool) []string {
 	for _, entry := range folder.Entries {
 		if isFile {
@@ -85,7 +105,8 @@ func (s *SDKDownloader) fillResult(fileList []string, folder *files.ListFolderRe
 func (s *SDKDownloader) DownloadFile(path string) (*files.FileMetadata, *[]byte, error) {
 	fileMetadata, content, err := s.dbx.Download(&files.DownloadArg{Path: path})
 	if err != nil {
-		return nil, nil, err
+		fmt.Println(err)
+		return nil, nil, &ErrFailedDownloadDropbox{Err: err}
 	}
 	defer func(content io.ReadCloser) {
 		err := content.Close()
@@ -95,7 +116,7 @@ func (s *SDKDownloader) DownloadFile(path string) (*files.FileMetadata, *[]byte,
 	}(content)
 	data, err := ioutil.ReadAll(content)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, &ErrFailedDownloadDropbox{Err: err}
 	}
 
 	return fileMetadata, &data, nil
