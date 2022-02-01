@@ -2,12 +2,10 @@ package transport
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/context"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"photofinish/pkg/domain/auth"
-	"strings"
 )
 
 type AuthController struct {
@@ -84,17 +82,10 @@ func (c *AuthController) CheckTokenHandler(next http.HandlerFunc) http.HandlerFu
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-		fmt.Println(req.URL.String())
-		if strings.Contains(req.URL.String(), "dropbox") {
-			fmt.Println(req.URL)
-
-		}
 		if (*req).Method == "OPTIONS" {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
-
-		log.Println("check token handler")
 
 		header := req.Header.Get("Authorization")
 		username, err := c.authService.ValidateToken(header)
@@ -104,7 +95,6 @@ func (c *AuthController) CheckTokenHandler(next http.HandlerFunc) http.HandlerFu
 		}
 
 		context.Set(req, "username", username)
-		log.Println("success")
 
 		next(w, req)
 	}

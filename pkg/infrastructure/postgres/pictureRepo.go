@@ -1,8 +1,8 @@
 package postgres
 
 import (
-	"fmt"
 	"github.com/jackc/pgx"
+	log "github.com/sirupsen/logrus"
 	"photofinish/pkg/common/infrarstructure/db"
 	"photofinish/pkg/domain/pictures"
 	"strconv"
@@ -79,15 +79,11 @@ WHERE id = $1`
 }
 
 func (r *PictureRepositoryImpl) Search(dto *pictures.SearchPictureDto) (*pictures.SearchPictureResultDto, error) {
-	fmt.Println("dto")
-	fmt.Println(dto)
 	queryDTO, err := r.queryBuilder.buildSearchQuery(dto)
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Println("sqlCount")
-	fmt.Println(queryDTO.CountQuery.sql)
 	var result pictures.SearchPictureResultDto
 
 	i, err := db.Query(r.connPool, queryDTO.CountQuery.sql, queryDTO.CountQuery.data, r.scanCountSearchImages(err))
@@ -95,10 +91,6 @@ func (r *PictureRepositoryImpl) Search(dto *pictures.SearchPictureDto) (*picture
 		return nil, err
 	}
 
-	switch i.(type) {
-	case int:
-		fmt.Println("int")
-	}
 	result.CountAllItems = i.(int)
 
 	sql := queryDTO.PicturesQuery.sql
@@ -150,7 +142,7 @@ func (r *PictureRepositoryImpl) UpdateImageHandle(picture *pictures.Picture) err
 
 	err := db.WithTransactionSQL(r.connPool, handleQuery.sql, handleQuery.data)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return err
 	}
 
@@ -159,8 +151,6 @@ func (r *PictureRepositoryImpl) UpdateImageHandle(picture *pictures.Picture) err
 
 func (r *PictureRepositoryImpl) Store(imageTextDetectionDto *pictures.TextDetectionOnImageDto) error {
 	queryPg := r.queryBuilder.buildStoreImageQuery(imageTextDetectionDto)
-	fmt.Println(queryPg.sql)
-	fmt.Println(queryPg.data)
 
 	err := db.WithTransactionSQL(r.connPool, queryPg.sql, queryPg.data)
 

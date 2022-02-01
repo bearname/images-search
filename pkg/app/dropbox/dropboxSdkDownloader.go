@@ -1,7 +1,6 @@
 package dropbox
 
 import (
-	"fmt"
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox"
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox/files"
 	log "github.com/sirupsen/logrus"
@@ -30,32 +29,6 @@ func NewSDKDownloader(accessToken string) *SDKDownloader {
 	s.dbx = files.New(conf)
 	return s
 }
-
-//
-//func (s *SDKDownloader) DownloadZip(path string) error {
-//	_, content, err := s.dbx.DownloadZip(files.NewDownloadZipArg(path))
-//	if err != nil {
-//		fmt.Println(err)
-//		return err
-//	}
-//
-//	f, err := os.OpenFile("./test.zip", os.O_WRONLY|os.O_CREATE, 0666)
-//	if err != nil {
-//		fmt.Println(err)
-//		return err
-//
-//	}
-//	defer f.Close()
-//	written, err := io.Copy(f, content)
-//	fmt.Println(written)
-//	//bytesData, err := ioutil.ReadAll(content)
-//	if err != nil {
-//		return err
-//	}
-//	return nil
-//
-//	//return &bytesData, nil
-//}
 
 func (s *SDKDownloader) GetListFolder(path string, recursive bool, isNeedFile bool) ([]string, error) {
 	folder, err := s.dbx.ListFolder(&files.ListFolderArg{
@@ -95,7 +68,6 @@ func (s *SDKDownloader) fillResult(fileList []string, folder *files.ListFolderRe
 			case *files.FileMetadata:
 				fileEntry := entry.(*files.FileMetadata)
 				filePath := fileEntry.PathLower
-				fmt.Println("Document found :" + filePath)
 				fileList = append(fileList, filePath)
 			}
 		} else {
@@ -103,7 +75,6 @@ func (s *SDKDownloader) fillResult(fileList []string, folder *files.ListFolderRe
 			case *files.FolderMetadata:
 				fileEntry := entry.(*files.FolderMetadata)
 				filePath := fileEntry.PathLower
-				fmt.Println("File found :" + filePath)
 				fileList = append(fileList, filePath)
 			}
 		}

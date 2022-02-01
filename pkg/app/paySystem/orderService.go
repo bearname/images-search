@@ -1,7 +1,7 @@
 package paySystem
 
 import (
-	"fmt"
+	log "github.com/sirupsen/logrus"
 	"photofinish/pkg/common/util/uuid"
 	"photofinish/pkg/domain/order"
 )
@@ -19,16 +19,15 @@ func NewOrderService(repo order.Repo) *OrderService {
 func (s *OrderService) OnHandle(paymentSystem order.PaymentSystem, event interface{}, remoteIp string) error {
 	updateOrderDTO, err := paymentSystem.OnHandleEvent(event, remoteIp)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return err
 	}
 	err = s.repo.UpdateStatus(updateOrderDTO)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return err
 	}
 
-	fmt.Println("Order: ", updateOrderDTO)
 	//TODO
 	// updateOrderStatus(orderId, status)
 	// get /api/v1/users/{username}/orders
@@ -64,7 +63,6 @@ func (s *OrderService) Buy(paymentSystem order.PaymentSystem, dto order.CreateOr
 		}
 		return "", err
 	}
-	fmt.Println(payResult)
 
 	err = s.repo.SavePayResult(payResult)
 	if err != nil {

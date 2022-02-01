@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"fmt"
 	"photofinish/pkg/common/util/uuid"
 	"photofinish/pkg/domain/pictures"
 	"strconv"
@@ -68,10 +67,6 @@ func (s *pictureQueryBuilder) buildStoreAllQuery(picturesList []*pictures.TextDe
 
 	sql += detectedTextSql
 	data = append(data, textData...)
-	fmt.Println(len(data))
-	fmt.Println(sql)
-	fmt.Println(data)
-	fmt.Println(len(data))
 
 	return &query{sql: sql, data: data}, nil
 }

@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"fmt"
 	"github.com/jackc/pgx"
 	"photofinish/pkg/domain/order"
 	"strconv"
@@ -37,11 +36,6 @@ INSERT INTO picture_in_order (orderId, pictureId) VALUES `
 		data = append(data, orderId, price.PictureID)
 	}
 
-	//picturesSql += `($` + strconv.Itoa(pictureI) + `, $` + strconv.Itoa(pictureI+1) + `, $` + strconv.Itoa(pictureI+2) + `, $` + strconv.Itoa(pictureI+3) + `) RETURNING ID;`
-	//id := uuid.Generate().String()
-	//data = append(data, id, image.DropboxPath, image.EventId)
-	fmt.Println(sql)
-	//return db.WithTransactionSQL(r.connPool, sql, data)
 	tx, err := r.connPool.Begin()
 	if err != nil {
 		if tx != nil {

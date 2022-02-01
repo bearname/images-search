@@ -2,8 +2,8 @@ package picture
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/nfnt/resize"
+	log "github.com/sirupsen/logrus"
 	"image"
 	"image/jpeg"
 	"image/png"
@@ -32,14 +32,14 @@ func (c *ImageCompressor) Compress(fileOrigin *[]byte, quality int, baseWidth in
 	if typeImage == 0 {
 		err := png.Encode(&fileOut, canvas)
 		if err != nil {
-			fmt.Println("Failed to compress image")
+			log.Println("Failed to compress image")
 			return &fileOut, false
 
 		}
 	} else {
 		err := jpeg.Encode(&fileOut, canvas, &jpeg.Options{Quality: quality})
 		if err != nil {
-			fmt.Println("Failed to compress image")
+			log.Println("Failed to compress image")
 			return &fileOut, false
 		}
 	}
@@ -57,27 +57,27 @@ func (c *ImageCompressor) decodeImage(format pictures.SupportedImgType, fileData
 		typeImage = 1
 		origin, err = jpeg.Decode(buffer)
 		if err != nil {
-			fmt.Println("jpeg.Decode(fileData)")
+			log.Println("jpeg.Decode(fileData)")
 			return nil, 0, nil, false
 		}
 		tmp := bytes.NewBuffer(*fileData)
 		config, err = jpeg.DecodeConfig(tmp)
 		if err != nil {
-			fmt.Println("jpeg.DecodeConfig(temp)")
+			log.Println("jpeg.DecodeConfig(temp)")
 			return nil, 0, nil, false
 		}
 	} else if format == pictures.PNG {
 		typeImage = 0
 		origin, err = png.Decode(buffer)
 		if err != nil {
-			fmt.Println("png.Decode(fileData)")
+			log.Println("png.Decode(fileData)")
 			return nil, 0, nil, false
 
 		}
 		tmp := bytes.NewBuffer(*fileData)
 		config, err = png.DecodeConfig(tmp)
 		if err != nil {
-			fmt.Println("png.DecodeConfig(temp)")
+			log.Println("png.DecodeConfig(temp)")
 			return nil, 0, nil, false
 		}
 	}

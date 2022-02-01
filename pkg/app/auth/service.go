@@ -88,8 +88,6 @@ func (s *ServiceImpl) ValidateToken(authorizationHeader string) (string, error) 
 	}
 
 	token, ok := CheckToken(tokenString)
-	log.Println("bearerToken " + tokenString)
-
 	if !ok {
 		return "", auth.ErrInvalidAccessToken
 	}

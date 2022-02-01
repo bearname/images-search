@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"errors"
-	"fmt"
 	"github.com/jackc/pgx"
 	"photofinish/pkg/domain/dto"
 	"photofinish/pkg/domain/event"
@@ -81,7 +80,6 @@ func (r *EventRepositoryImpl) Store(eventDto *event.CreateEventInputDto) (int, e
 	var data []interface{}
 	data = append(data, eventDto.Name, eventDto.Date, eventDto.Location)
 
-	fmt.Println(data)
 	lastInsertId := -1
 	const sql = "INSERT INTO events (name, date, location) VALUES ($1, $2, $3) RETURNING id"
 	row := r.connPool.QueryRow(sql, data...)

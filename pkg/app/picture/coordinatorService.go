@@ -2,7 +2,6 @@ package picture
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox/files"
 	log "github.com/sirupsen/logrus"
@@ -83,7 +82,7 @@ func (c *CoordinatorServiceImpl) PerformAddImage(image *pictures.Picture) error 
 		if image.ProcessingStatus == pictures.TooBig {
 			return nil
 		}
-		fmt.Println("IsOriginalSaved")
+		log.Println("IsOriginalSaved")
 	}
 	if !image.IsPreviewSaved {
 		if !isDownloaded {

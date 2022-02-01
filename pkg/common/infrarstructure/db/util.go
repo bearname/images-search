@@ -3,7 +3,6 @@ package db
 import (
 	"github.com/jackc/pgx"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"net"
 	"time"
 )
@@ -13,7 +12,6 @@ func GetUrl(DbUser string, DbPassword string, DbAddress string, DbName string) s
 }
 
 func GetDBConfig(databaseUri string, maxConnections int, acquireTimeout int) (pgx.ConnPoolConfig, error) {
-	log.Info("databaseUri: " + databaseUri)
 	pgxConnConfig, err := pgx.ParseURI(databaseUri)
 	if err != nil {
 		return pgx.ConnPoolConfig{}, errors.Wrap(err, "failed to parse database URI from environment variable")

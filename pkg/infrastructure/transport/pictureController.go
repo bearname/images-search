@@ -1,14 +1,12 @@
 package transport
 
 import (
-	"fmt"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"photofinish/pkg/domain/dto"
 	"photofinish/pkg/domain/pictures"
 	"strconv"
-	"time"
 )
 
 type PictureController struct {
@@ -54,7 +52,6 @@ func (c *PictureController) DetectImageFromDropboxUrl() func(http.ResponseWriter
 			return
 		}
 
-		start := time.Now()
 		taskResp, err := c.service.DetectImageFromUrl(dropboxUrl, eventId)
 		if err != nil {
 			log.Println(err)
@@ -62,11 +59,6 @@ func (c *PictureController) DetectImageFromDropboxUrl() func(http.ResponseWriter
 			return
 		}
 
-		fmt.Println("\n\n\n\n\n\n\n\n\n\n\nSeconds:")
-		end := time.Since(start)
-		fmt.Println(end.Seconds())
-		fmt.Println("Minutes:")
-		fmt.Println(end.Minutes())
 		c.WriteJsonResponse(w, response{
 			Code:    http.StatusOK,
 			Message: "Folder '" + dropboxUrl + "' processing",
@@ -171,13 +163,11 @@ func (c *PictureController) SearchPictures() func(http.ResponseWriter, *http.Req
 		searchDTO := pictures.NewSearchPictureDto(participantNumber, confidence, eventId, dto.Page{Limit: limit, Offset: offset})
 		searchDto, err := c.service.Search(&searchDTO)
 		if err != nil {
-			fmt.Println(err.Error())
 			log.Println(err)
 			http.Error(w, "Failed found searchDto", http.StatusBadRequest)
 			return
 		}
 
-		fmt.Println(searchDto)
 		if searchDto.Pictures == nil {
 			searchDto.Pictures = make([]pictures.SearchPictureItem, 0)
 		}
@@ -225,7 +215,6 @@ func (c *PictureController) DeletePicture() func(http.ResponseWriter, *http.Requ
 
 		err = c.service.Delete(idString)
 		if err != nil {
-			fmt.Println(err.Error())
 			log.Println(err)
 			http.Error(w, "Failed found pictures", http.StatusBadRequest)
 			return

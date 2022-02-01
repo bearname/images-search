@@ -2,7 +2,6 @@ package transport
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -85,7 +84,6 @@ func (c *EventController) DeleteEvent() func(http.ResponseWriter, *http.Request)
 
 		err = c.service.DeleteEvent(eventId)
 		if err != nil {
-			fmt.Println(err.Error())
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -113,8 +111,7 @@ func (c *EventController) List() func(http.ResponseWriter, *http.Request) {
 			limit, err = strconv.Atoi(limitParameter)
 			msg := "Invalid 'limit' query parameter. 'limit' must be in range [0, 100]"
 			if err != nil {
-				log.Println(err)
-				log.Println(msg)
+				log.Println(err, msg)
 				http.Error(w, msg, http.StatusBadRequest)
 				return
 			}
@@ -130,8 +127,7 @@ func (c *EventController) List() func(http.ResponseWriter, *http.Request) {
 			offset, err = strconv.Atoi(offsetParameter)
 			msg := "Invalid 'offset' query parameter. 'offset' must be in range [0, 100]"
 			if err != nil {
-				log.Println(err)
-				log.Println(msg)
+				log.Println(err, msg)
 				http.Error(w, msg, http.StatusBadRequest)
 				return
 			}
@@ -144,12 +140,10 @@ func (c *EventController) List() func(http.ResponseWriter, *http.Request) {
 
 		events, err := c.service.Search(&dto.Page{Offset: offset, Limit: limit})
 		if err != nil {
-			fmt.Println(err.Error())
 			log.Println(err)
 			http.Error(w, "Failed found pictures", http.StatusBadRequest)
 			return
 		}
-		fmt.Println(events)
 		if events == nil {
 			events = make([]event.Event, 0)
 		}

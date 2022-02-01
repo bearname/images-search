@@ -1,7 +1,6 @@
 package transport
 
 import (
-	"fmt"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -44,7 +43,6 @@ func (c *TasksController) GetTaskStatistic() func(http.ResponseWriter, *http.Req
 
 		stats, err := c.service.GetTaskStatistic(taskId)
 		if err != nil {
-			fmt.Println(err.Error())
 			log.Println(err)
 			http.Error(w, "Failed found pictures", http.StatusBadRequest)
 			return
@@ -105,7 +103,6 @@ func (c *TasksController) GetTaskList() func(http.ResponseWriter, *http.Request)
 
 		tasksList, err := c.service.GetTasks(&dto.Page{Offset: offset, Limit: limit})
 		if err != nil {
-			fmt.Println(err.Error())
 			log.Println(err)
 			http.Error(w, "Failed found pictures", http.StatusBadRequest)
 			return

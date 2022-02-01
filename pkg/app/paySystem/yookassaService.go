@@ -2,15 +2,16 @@ package paySystem
 
 import (
 	"errors"
-	"fmt"
+	log "github.com/sirupsen/logrus"
 	"net"
 	"photofinish/pkg/domain/order"
 	"photofinish/pkg/infrastructure/yookassa"
-	"reflect"
 	"strings"
 )
 
 var ErrInvalidIP = errors.New("unsupported ip address")
+var ErrInvalidEvent = errors.New("invalid event")
+var ErrFailedHandle = errors.New("failed handle payment")
 
 type YookassaService struct {
 	sdk             *yookassa.SDK
@@ -66,18 +67,17 @@ func (s *YookassaService) OnHandleEvent(event interface{}, remoteIp string) (*or
 		return nil, ErrInvalidIP
 	}
 	var yookassaEvent yookassa.NotificationEvent
-	of := reflect.TypeOf(event)
-	fmt.Println(of)
 	switch event.(type) {
 	case yookassa.NotificationEvent:
 		yookassaEvent = event.(yookassa.NotificationEvent)
 	default:
-		return nil, errors.New("invalid event")
+		return nil, ErrInvalidEvent
 	}
 
 	updateOrderDTO, isOk := s.handlePayment(yookassaEvent)
 	if !isOk {
-		return nil, errors.New("failed handle payment" + yookassaEvent.Object.ID)
+		log.Println(ErrFailedHandle.Error(), yookassaEvent)
+		return nil, ErrFailedHandle
 	}
 	return updateOrderDTO, nil
 }
@@ -100,11 +100,6 @@ func (s *YookassaService) Buy(dto order.CreateOrderDTO) (*order.PayResultDTO, er
 		ID:         paymentResp.ID,
 		Status:     paymentResp.Status,
 		ConfirmUrl: paymentResp.Confirmation.ConfirmationURL,
-		//OrderId:       "orderIdStr",
-		//ID:            resp.ID,
-		//ReceiptURL:    resp.ReceiptURL,
-		//ReceiptNumber: resp.ReceiptNumber,
-		//Status:        resp.Status,
 	}, nil
 }
 
@@ -126,9 +121,8 @@ func (s *YookassaService) initWebhook() error {
 		}
 		s.canceledWebhook = *webhook
 	}
-	fmt.Println("webhook", list)
 
-	isFoundSucceed, isFoundCanceled := checkExistedWebhook(s, list)
+	isFoundSucceed, isFoundCanceled := s.checkExistedWebhook(list)
 	if !isFoundSucceed {
 		webhook, err := s.createWebhook(yookassa.PaymentSucceeded)
 		if err != nil {
@@ -142,12 +136,12 @@ func (s *YookassaService) initWebhook() error {
 		if err != nil {
 			return err
 		}
-		s.successWebhook = *webhook
+		s.canceledWebhook = *webhook
 	}
 	return nil
 }
 
-func checkExistedWebhook(s *YookassaService, list *yookassa.WebhookListResp) (bool, bool) {
+func (s *YookassaService) checkExistedWebhook(list *yookassa.WebhookListResp) (bool, bool) {
 	isFoundSucceed := false
 	isFoundCanceled := false
 	for _, item := range list.Items {
@@ -191,7 +185,7 @@ func (s *YookassaService) handlePayment(event yookassa.NotificationEvent) (*orde
 	default:
 		return nil, false
 	}
-	fmt.Println("Order: ", updateOrderDTO)
-	fmt.Println(event.Type + " was successful!")
+	log.Println("Order: ", updateOrderDTO, event.Type, " was successful!")
+
 	return &updateOrderDTO, true
 }

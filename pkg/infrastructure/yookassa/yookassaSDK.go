@@ -3,7 +3,6 @@ package yookassa
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"photofinish/pkg/common/util/uuid"
@@ -54,8 +53,6 @@ func (s *SDK) Pay(payDTO *CreatePaymentDTO) (*PaymentResp, error) {
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
 
-	fmt.Println(res)
-	fmt.Println(string(body))
 	var paymentResp PaymentResp
 	err = json.Unmarshal(body, &paymentResp)
 	return &paymentResp, err
@@ -77,7 +74,6 @@ func (s *SDK) GetWebhookList() (*WebhookListResp, error) {
 		return nil, err
 	}
 
-	fmt.Println(string(all))
 	var webhooksResp WebhookListResp
 	err = json.Unmarshal(all, &webhooksResp)
 	if err != nil {

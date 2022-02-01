@@ -3,12 +3,14 @@ package paySystem
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/charge"
 	"photofinish/pkg/domain/order"
-	"reflect"
 )
+
+const ChargeSucceeded = "charge.succeeded"
+const ChargeFailed = "charge.failed"
 
 type StripeService struct {
 	secretKey string
@@ -22,8 +24,6 @@ func NewStripeService(secretKey string) *StripeService {
 
 func (s *StripeService) OnHandleEvent(event interface{}, _ string) (*order.UpdateOrderStatusDTO, error) {
 	var stripeEvent stripe.Event
-	of := reflect.TypeOf(event)
-	fmt.Println(of)
 	switch event.(type) {
 	case stripe.Event:
 		stripeEvent = event.(stripe.Event)
@@ -63,17 +63,12 @@ func (s *StripeService) Buy(dto order.CreateOrderDTO) (*order.PayResultDTO, erro
 		var stripeErr order.StripeError
 		err = json.Unmarshal([]byte(err.Error()), &stripeErr)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		} else {
-			fmt.Println(stripeErr)
+			log.Println(stripeErr)
 		}
 		return nil, err
 	}
-
-	fmt.Println(resp.FailureMessage)
-	fmt.Println(resp.FailureCode)
-
-	fmt.Println(resp)
 
 	return &order.PayResultDTO{
 		OrderId:       orderIdStr,
@@ -94,22 +89,23 @@ func (s *StripeService) handlePayment(event stripe.Event) (*order.UpdateOrderSta
 	var chargeJson order.CreateOrderDTO
 	err = json.Unmarshal([]byte(payData), &chargeJson)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return nil, false
 	}
 	orderId := paymentIntent.Metadata["orderId"]
 
 	var updateOrderDTO order.UpdateOrderStatusDTO
 	updateOrderDTO.OrderId = orderId
+
 	switch event.Type {
-	case "charge.succeeded":
+	case ChargeSucceeded:
 		updateOrderDTO.Status = order.PaySuccess
-	case "charge.failed":
+	case ChargeFailed:
 		updateOrderDTO.Status = order.PayFailed
 	default:
 		return nil, false
 	}
-	fmt.Println("Order: ", updateOrderDTO)
-	fmt.Println(event.Type + " was successful!")
+	log.Println("Order: ", updateOrderDTO)
+	log.Println(event.Type + " was successful!")
 	return &updateOrderDTO, true
 }

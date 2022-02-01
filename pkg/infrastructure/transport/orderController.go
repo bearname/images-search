@@ -3,14 +3,12 @@ package transport
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"github.com/stripe/stripe-go"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"photofinish/pkg/app/paySystem"
 	"photofinish/pkg/common/util"
 	"photofinish/pkg/domain/order"
@@ -104,7 +102,7 @@ func (c *OrderController) OnEventYookassa() func(http.ResponseWriter, *http.Requ
 		}
 		remoteIp, err := util.GetRemoteIp(req.RemoteAddr)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error reading request body: %v\n", err)
+			log.Printf("Error reading request body: %v\n", err)
 			w.WriteHeader(http.StatusServiceUnavailable)
 			return
 		}
@@ -113,18 +111,15 @@ func (c *OrderController) OnEventYookassa() func(http.ResponseWriter, *http.Requ
 		req.Body = http.MaxBytesReader(w, req.Body, MaxBodyBytes)
 		payload, err := ioutil.ReadAll(req.Body)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error reading request body: %v\n", err)
+			log.Printf("Error reading request body: %v\n", err)
 			w.WriteHeader(http.StatusServiceUnavailable)
 			return
 		}
 
-		bytes := string(payload)
-		fmt.Println(bytes)
-
 		event := yookassa.NotificationEvent{}
 
 		if err = json.Unmarshal(payload, &event); err != nil {
-			fmt.Fprintf(os.Stderr, "PayFailed to parse webhook body json: %v\n", err.Error())
+			log.Printf("PayFailed to parse webhook body json: %v\n", err.Error())
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -162,14 +157,14 @@ func (c *OrderController) OnEventStripe() func(http.ResponseWriter, *http.Reques
 		event := stripe.Event{}
 
 		if err = json.Unmarshal(payload, &event); err != nil {
-			fmt.Fprintf(os.Stderr, "PayFailed to parse webhook body json: %v\n", err.Error())
+			log.Printf("PayFailed to parse webhook body json: %v\n", err.Error())
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		err = c.orderService.OnHandle(c.stripeService, event, remoteIp)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "PayFailed to parse webhook body json: %v\n", err.Error())
+			log.Printf("PayFailed to parse webhook body json: %v\n", err.Error())
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
@@ -207,15 +202,16 @@ func (c *OrderController) GetOrder() http.HandlerFunc {
 		}
 		userDto, err := c.userService.Find(username)
 		if err != nil {
+			log.Error(err)
 			http.Error(w, "cannot check username", http.StatusBadRequest)
 			return
 		}
-
 		returnOrderDto, err := c.orderService.GetOrder(&order.GetOrderDTO{
 			OrderId: orderId,
 			UserId:  userDto.Id,
 		})
 		if err != nil {
+			log.Error(err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
