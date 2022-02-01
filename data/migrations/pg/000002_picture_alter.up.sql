@@ -2,7 +2,13 @@ BEGIN TRANSACTION;
 ALTER TABLE pictures
     ADD dropbox_path varchar default null;
 ALTER TABLE pictures
+    ADD dropbox_path varchar default null;
+ALTER TABLE pictures
+    ADD original_s3_id varchar default null;
+ALTER TABLE pictures
     ADD is_original_saved bool default false;
+ALTER TABLE pictures
+    ADD preview_s3_id varchar default null;
 ALTER TABLE pictures
     ADD is_preview_saved bool default false;
 ALTER TABLE pictures

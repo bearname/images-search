@@ -7,7 +7,7 @@ import (
 	"image"
 	"image/jpeg"
 	"image/png"
-	"strings"
+	"photofinish/pkg/domain/pictures"
 )
 
 type ImageCompressor struct {
@@ -17,10 +17,9 @@ func NewImageCompressor() *ImageCompressor {
 	return new(ImageCompressor)
 }
 
-func (c *ImageCompressor) Compress(fileOrigin *[]byte, quality int, baseWidth int, format string) (*bytes.Buffer, bool) {
+func (c *ImageCompressor) Compress(fileOrigin *[]byte, quality int, baseWidth int, format pictures.SupportedImgType) (*bytes.Buffer, bool) {
 	var fileOut bytes.Buffer
 
-	format = strings.ToLower(format)
 	origin, typeImage, config, ok := c.decodeImage(format, fileOrigin)
 
 	if !ok {
@@ -29,10 +28,7 @@ func (c *ImageCompressor) Compress(fileOrigin *[]byte, quality int, baseWidth in
 	width := uint(baseWidth)
 	height := uint(baseWidth * config.Height / config.Width)
 	canvas := resize.Thumbnail(width, height, *origin, resize.Lanczos3)
-	//
-	//fmt.Println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-	//fmt.Printf("a: %T, %d\n", origin, unsafe.Sizeof(origin))
-	//fmt.Println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+
 	if typeImage == 0 {
 		err := png.Encode(&fileOut, canvas)
 		if err != nil {
@@ -45,20 +41,19 @@ func (c *ImageCompressor) Compress(fileOrigin *[]byte, quality int, baseWidth in
 		if err != nil {
 			fmt.Println("Failed to compress image")
 			return &fileOut, false
-
 		}
 	}
 
 	return &fileOut, true
 }
 
-func (c *ImageCompressor) decodeImage(format string, fileData *[]byte) (*image.Image, int64, *image.Config, bool) {
+func (c *ImageCompressor) decodeImage(format pictures.SupportedImgType, fileData *[]byte) (*image.Image, int64, *image.Config, bool) {
 	var origin image.Image
 	var config image.Config
 	var typeImage int64
 	var err error
 	buffer := bytes.NewBuffer(*fileData)
-	if format == "jpg" || format == "jpeg" {
+	if format == pictures.JPEG || format == pictures.JPG {
 		typeImage = 1
 		origin, err = jpeg.Decode(buffer)
 		if err != nil {
@@ -71,7 +66,7 @@ func (c *ImageCompressor) decodeImage(format string, fileData *[]byte) (*image.I
 			fmt.Println("jpeg.DecodeConfig(temp)")
 			return nil, 0, nil, false
 		}
-	} else if format == "png" {
+	} else if format == pictures.PNG {
 		typeImage = 0
 		origin, err = png.Decode(buffer)
 		if err != nil {

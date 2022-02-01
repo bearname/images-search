@@ -1,8 +1,11 @@
 package picture
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/aws/aws-sdk-go/aws"
 	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"photofinish/pkg/app/dropbox"
@@ -134,10 +137,31 @@ func (s *ServiceImpl) GetDropboxFolders() ([]string, error) {
 }
 
 func (s *ServiceImpl) Delete(pictureId string) error {
-	err := (*s.pictureRepo).IsExists(pictureId)
+	img, err := (*s.pictureRepo).FindPicture(pictureId)
 	if err != nil {
 		log.Error(err)
 		return pictures.ErrNotFound
+	}
+	var ids []types.ObjectIdentifier
+	if img.IsOriginalSaved {
+		ids = append(ids, types.ObjectIdentifier{
+			Key: aws.String(img.OriginalS3Id),
+		})
+	}
+	if img.IsPreviewSaved {
+		ids = append(ids, types.ObjectIdentifier{Key: aws.String(img.PreviewS3Id)})
+	}
+
+	_, err = s.s3Client.DeleteObjects(context.Background(), &s3.DeleteObjectsInput{
+		Bucket: aws.String(s.bucket),
+		Delete: &types.Delete{
+			Objects: ids,
+			Quiet:   true,
+		},
+	})
+
+	if err != nil {
+		return err
 	}
 
 	// TODO

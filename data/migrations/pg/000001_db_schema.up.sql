@@ -8,7 +8,7 @@ create table IF NOT EXISTS events
     location varchar(255)
 );
 
-create table pictures
+CREATE pictures
 (
     id                 uuid not null
         constraint pictures_pkey

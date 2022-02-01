@@ -213,7 +213,7 @@ func cron(duration time.Duration, fn func() error) {
 var rw sync.Mutex
 var i int
 
-func handleImageAsync(ch chan pictures.Picture, wg *sync.WaitGroup, pictureCoordinator *picture.CoordinatorServiceImpl) {
+func handleImageAsync(ch chan pictures.Picture, wg *sync.WaitGroup, pictureCoordinator pictures.CoordinatorService) {
 	fmt.Println(len(ch))
 
 	for img := range ch {

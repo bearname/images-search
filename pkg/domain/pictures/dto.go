@@ -87,7 +87,9 @@ type PictureDTO struct {
 	TaskId string
 
 	DropboxPath  string
+	OriginalS3Id string
 	OriginalPath string
+	PreviewS3Id  string
 	PreviewPath  string
 
 	Attempts         int

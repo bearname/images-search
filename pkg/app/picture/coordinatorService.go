@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox/files"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"photofinish/pkg/app/aws/recognition"
 	"photofinish/pkg/domain"
@@ -70,6 +69,7 @@ func (c *CoordinatorServiceImpl) PerformAddImage(image *pictures.Picture) error 
 			}
 			image.ProcessingStatus = pictures.Processing
 			image.OriginalPath = uploadOutput.Location
+			image.OriginalS3Id = uploadOutput.UploadID
 			image.IsOriginalSaved = true
 		} else {
 			image.ProcessingStatus = pictures.TooBig
@@ -93,16 +93,16 @@ func (c *CoordinatorServiceImpl) PerformAddImage(image *pictures.Picture) error 
 			}
 		}
 
-		extension, err := getExtension(image.DropboxPath)
+		extension, err := c.getExtension(image.DropboxPath)
 		if err != nil {
-			err = errors.New("Failed scale image")
+			err = pictures.ErrFailedScale
 			c.handleError(image, err)
 			return err
 		}
 
 		compressBuffer, ok := c.compressor.Compress(originalData, 90, 300, extension)
 		if !ok {
-			err = errors.New("Failed scale image")
+			err = pictures.ErrFailedScale
 			c.handleError(image, err)
 			return err
 		}
@@ -114,7 +114,10 @@ func (c *CoordinatorServiceImpl) PerformAddImage(image *pictures.Picture) error 
 		}
 		image.IsPreviewSaved = true
 		image.PreviewPath = uploadOutput.Location
+		image.PreviewS3Id = uploadOutput.UploadID
+
 		image.ProcessingStatus = pictures.Processing
+
 		err = c.pictureRepo.UpdateImageHandle(image)
 		if err != nil {
 			c.handleError(image, err)
@@ -146,35 +149,23 @@ func (c *CoordinatorServiceImpl) PerformAddImage(image *pictures.Picture) error 
 		}
 	}
 
-	//if !image.IsMobileSaved {
-	//    if !isDownloaded {
-	//        originalData, err = c.downloadImage(image)
-	//        if err != nil {
-	//            return err
-	//        }
-	//    }
-	//
-	//    fmt.Println("IsMobileSaved")
-	//}
-
 	image.ProcessingStatus = pictures.Success
 
 	return c.pictureRepo.UpdateImageHandle(image)
 }
 
-func getExtension(path string) (string, error) {
-	if strings.LastIndex(path, ".png") != -1 {
-		return "png", nil
+func (c *CoordinatorServiceImpl) getExtension(path string) (pictures.SupportedImgType, error) {
+	if strings.LastIndex(path, "."+string(pictures.PNG)) != -1 {
+		return pictures.PNG, nil
 	}
-	if strings.LastIndex(path, ".jpeg") != -1 {
-		return "jpeg", nil
+	if strings.LastIndex(path, "."+string(pictures.JPEG)) != -1 {
+		return pictures.JPEG, nil
 	}
-	if strings.LastIndex(path, ".jpg") != -1 {
-		return "jpg", nil
+	if strings.LastIndex(path, "."+string(pictures.JPG)) != -1 {
+		return pictures.JPG, nil
 	}
 
-	return "", errors.New("unknown extension")
-
+	return "", pictures.ErrUnsupportedType
 }
 
 func (c *CoordinatorServiceImpl) downloadImage(image *pictures.Picture) (*files.FileMetadata, *[]byte, error) {
@@ -196,6 +187,8 @@ func (c *CoordinatorServiceImpl) handleError(image *pictures.Picture, err error)
 	if image.Attempts > c.maxAttemptsBeforeNotify {
 
 		log.Println("Notify developer")
+		//TODO
+		// send to developer tg
 		//err := c.notifier.Notify(pictures)
 		//if err != nil {
 		//    log.Println("failed notify developer")

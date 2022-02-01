@@ -1,7 +1,6 @@
 package pictures
 
 import (
-	"errors"
 	"photofinish/pkg/common/util/uuid"
 	"time"
 )
@@ -18,8 +17,6 @@ const (
 	Deleted
 )
 
-var ErrNotFound = errors.New("pictures not exist")
-
 type Picture struct {
 	Id      uuid.UUID
 	EventId int
@@ -27,7 +24,9 @@ type Picture struct {
 	TaskId string
 
 	DropboxPath  string
+	OriginalS3Id string
 	OriginalPath string
+	PreviewS3Id  string
 	PreviewPath  string
 
 	Attempts         int
@@ -47,6 +46,14 @@ type TextDetection struct {
 	DetectedText string
 	Confidence   float64
 }
+
+type SupportedImgType string
+
+const (
+	JPEG SupportedImgType = "jpeg"
+	JPG  SupportedImgType = "jpg"
+	PNG  SupportedImgType = "png"
+)
 
 func NewTextDetection(detectedText string, confidence float64) *TextDetection {
 	t := new(TextDetection)

@@ -93,7 +93,7 @@ func (s *SDKDownloader) fillResult(fileList []string, folder *files.ListFolderRe
 		if isFile {
 			switch entry.(type) {
 			case *files.FileMetadata:
-				fileEntry, _ := entry.(*files.FileMetadata)
+				fileEntry := entry.(*files.FileMetadata)
 				filePath := fileEntry.PathLower
 				fmt.Println("Document found :" + filePath)
 				fileList = append(fileList, filePath)
@@ -101,7 +101,7 @@ func (s *SDKDownloader) fillResult(fileList []string, folder *files.ListFolderRe
 		} else {
 			switch entry.(type) {
 			case *files.FolderMetadata:
-				fileEntry, _ := entry.(*files.FolderMetadata)
+				fileEntry := entry.(*files.FolderMetadata)
 				filePath := fileEntry.PathLower
 				fmt.Println("File found :" + filePath)
 				fileList = append(fileList, filePath)

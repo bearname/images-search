@@ -1,5 +1,5 @@
 package pictures
 
 type CoordinatorService interface {
-	PerformAddImage(picture Picture) error
+	PerformAddImage(picture *Picture) error
 }

@@ -176,7 +176,7 @@ func handleMessage(message amqp.Delivery, err error, ch chan pictures.DropboxIma
 	}
 }
 
-func handleImageAsync(ch chan pictures.DropboxImage, wg *sync.WaitGroup, pictureCoordinator *picture.CoordinatorServiceImpl) {
+func handleImageAsync(ch chan pictures.DropboxImage, wg *sync.WaitGroup, pictureCoordinator pictures.CoordinatorService) {
 	for img := range ch {
 		p := pictures.Picture{
 			Id:              img.Id,

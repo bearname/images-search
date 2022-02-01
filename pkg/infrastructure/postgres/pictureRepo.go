@@ -41,7 +41,7 @@ func (r *PictureRepositoryImpl) IsExists(pictureId string) error {
 
 func (r *PictureRepositoryImpl) FindPicture(pictureId string) (*pictures.PictureDTO, error) {
 	sql := `SELECT id, eventid, task_id, dropbox_path, 
-       original_path, preview_path, attempts, 
+       original_s3_id, original_path, preview_s3_id, preview_path, attempts, 
        processing_status, is_original_saved,
        is_preview_saved, is_text_recognized FROM pictures
 WHERE id = $1`
@@ -56,7 +56,9 @@ WHERE id = $1`
 			&dto.EventId,
 			&dto.TaskId,
 			&dto.DropboxPath,
+			&dto.OriginalS3Id,
 			&dto.OriginalPath,
+			&dto.PreviewS3Id,
 			&dto.PreviewPath,
 			&dto.Attempts,
 			&dto.ProcessingStatus,
@@ -108,6 +110,84 @@ func (r *PictureRepositoryImpl) Search(dto *pictures.SearchPictureDto) (*picture
 	result = res.(pictures.SearchPictureResultDto)
 
 	return &result, nil
+}
+
+func (r *PictureRepositoryImpl) SaveInitialPicture(image *pictures.InitialImage) (int, error) {
+	pictureQuery := r.queryBuilder.buildSaveInitialPictureQuery(image)
+
+	tx, err := r.connPool.Begin()
+	if err != nil {
+		return 0, err
+	}
+	var orderID int
+	err = tx.QueryRow(pictureQuery.sql, pictureQuery.data...).Scan(&orderID)
+	if err != nil {
+		return 0, err
+	}
+
+	return orderID, tx.Commit()
+}
+
+func (r *PictureRepositoryImpl) SaveInitialPictures(initial *pictures.InitialDropboxImage) (*pictures.InitialDropboxImageResult, error) {
+	queryData, ids, tasksId, err := r.queryBuilder.buildSaveInitialPicturesQuery(initial)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.WithTransactionSQL(r.connPool, queryData.sql, queryData.data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pictures.InitialDropboxImageResult{
+		ImagesId: ids,
+		TaskId:   *tasksId,
+	}, nil
+}
+
+func (r *PictureRepositoryImpl) UpdateImageHandle(picture *pictures.Picture) error {
+	handleQuery := r.queryBuilder.buildUpdateImageHandleQuery(picture)
+
+	err := db.WithTransactionSQL(r.connPool, handleQuery.sql, handleQuery.data)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *PictureRepositoryImpl) Store(imageTextDetectionDto *pictures.TextDetectionOnImageDto) error {
+	queryPg := r.queryBuilder.buildStoreImageQuery(imageTextDetectionDto)
+	fmt.Println(queryPg.sql)
+	fmt.Println(queryPg.data)
+
+	err := db.WithTransactionSQL(r.connPool, queryPg.sql, queryPg.data)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *PictureRepositoryImpl) StoreAll(pictures []*pictures.TextDetectionOnImageDto) error {
+	pgQuery, err := r.queryBuilder.buildStoreAllQuery(pictures)
+	if err != nil {
+		return err
+	}
+	return db.WithTransactionSQL(r.connPool, pgQuery.sql, pgQuery.data)
+}
+
+func (r *PictureRepositoryImpl) Delete(imageId string) error {
+	//sql := "DELETE FROM pictures WHERE id=$1"
+	sql := "UPDATE pictures SET processing_status = $1 WHERE id = $2"
+
+	err := db.WithTransaction(r.connPool, func(tx *pgx.Tx) error {
+		_, err := tx.Exec(sql, pictures.Deleted, imageId)
+		return err
+	})
+	return err
 }
 
 func (r *PictureRepositoryImpl) scanCountSearchImages(err error) func(rows *pgx.Rows) (interface{}, error) {
@@ -215,87 +295,4 @@ func (r *PictureRepositoryImpl) buildTextDetectionList(rows *pgx.Rows, onlyEvent
 	}
 
 	return &arr, nil
-}
-
-func (r *PictureRepositoryImpl) SaveInitialPicture(image *pictures.InitialImage) (int, error) {
-	pictureQuery := r.queryBuilder.buildSaveInitialPictureQuery(image)
-
-	tx, err := r.connPool.Begin()
-	if err != nil {
-		return 0, err
-	}
-	var orderID int
-	err = tx.QueryRow(pictureQuery.sql, pictureQuery.data...).Scan(&orderID)
-	if err != nil {
-		return 0, err
-	}
-
-	return orderID, tx.Commit()
-}
-
-func (r *PictureRepositoryImpl) SaveInitialPictures(initial *pictures.InitialDropboxImage) (*pictures.InitialDropboxImageResult, error) {
-	queryData, ids, tasksId, err := r.queryBuilder.buildSaveInitialPicturesQuery(initial)
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.WithTransactionSQL(r.connPool, queryData.sql, queryData.data)
-	if err != nil {
-		return nil, err
-	}
-
-	return &pictures.InitialDropboxImageResult{
-		ImagesId: ids,
-		TaskId:   *tasksId,
-	}, nil
-}
-
-func (r *PictureRepositoryImpl) UpdateImageHandle(picture *pictures.Picture) error {
-	handleQuery := r.queryBuilder.buildUpdateImageHandleQuery(picture)
-
-	err := db.WithTransactionSQL(r.connPool, handleQuery.sql, handleQuery.data)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
-	return nil
-}
-
-func (r *PictureRepositoryImpl) Store(imageTextDetectionDto *pictures.TextDetectionOnImageDto) error {
-	queryPg := r.queryBuilder.buildStoreImageQuery(imageTextDetectionDto)
-	fmt.Println(queryPg.sql)
-	fmt.Println(queryPg.data)
-
-	err := db.WithTransactionSQL(r.connPool, queryPg.sql, queryPg.data)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *PictureRepositoryImpl) StoreAll(pictures []*pictures.TextDetectionOnImageDto) error {
-	pgQuery, err := r.queryBuilder.buildStoreAllQuery(pictures)
-	if err != nil {
-		return err
-	}
-	return db.WithTransactionSQL(r.connPool, pgQuery.sql, pgQuery.data)
-}
-
-func (r *PictureRepositoryImpl) Delete(imageId string) error {
-	//sql := "DELETE FROM pictures WHERE id=$1"
-	sql := "UPDATE pictures SET processing_status = $1 WHERE id = $2"
-
-	rows, err := r.connPool.Query(sql, pictures.Deleted, imageId)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-	if rows.Err() != nil {
-		return rows.Err()
-	}
-
-	return nil
 }
