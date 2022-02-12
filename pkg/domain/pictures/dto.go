@@ -59,10 +59,14 @@ type InitialDropboxImageResult struct {
 	TaskId   uuid.UUID
 }
 
-type TaskResponse struct {
+type TaskStatResponse struct {
 	TaskId          string
 	CountAllImages  int
 	CompletedImages int
+}
+
+type TaskResponse struct {
+	TaskId string
 }
 
 type DropboxImage struct {

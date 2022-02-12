@@ -29,7 +29,7 @@ func ExtractNumberFromString(input string) []string {
 
 func LoadEnvFileIfNeeded() {
 	var isNeedLoadEnvFile string
-	flag.StringVar(&isNeedLoadEnvFile, "d", "true", "is need load .env file")
+	flag.StringVar(&isNeedLoadEnvFile, "d", "false", "is need load .env file")
 	flag.Parse()
 	if isNeedLoadEnvFile == "true" {
 		err := godotenv.Load()

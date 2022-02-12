@@ -5,4 +5,4 @@ COPY ./dist ./app/bin/web
 RUN chmod +x /app/bin/rawImageHandler
 WORKDIR /app
 RUN apk --no-cache add ca-certificates
-CMD ["/app/bin/rawImageHandler", "-d", "false", "-log", "false"]
+CMD ["/app/bin/rawImageHandler",  "-d=true", "-log=false"]

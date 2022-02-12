@@ -1,6 +1,6 @@
 package pictures
 
-type Repository interface {
+type Repo interface {
 	IsExists(pictureId string) error
 	FindPicture(pictureId string) (*PictureDTO, error)
 	Search(dto *SearchPictureDto) (*SearchPictureResultDto, error)

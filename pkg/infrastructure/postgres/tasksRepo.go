@@ -3,21 +3,32 @@ package postgres
 import (
 	"github.com/jackc/pgx"
 	"photofinish/pkg/common/infrarstructure/db"
+	"photofinish/pkg/common/util/uuid"
 	"photofinish/pkg/domain/dto"
 	"photofinish/pkg/domain/tasks"
 )
 
-type TasksRepositoryImpl struct {
+type TasksRepoImpl struct {
 	connPool *pgx.ConnPool
 }
 
-func NewTasksRepositoryImpl(connPool *pgx.ConnPool) *TasksRepositoryImpl {
-	u := new(TasksRepositoryImpl)
+func NewTasksRepo(connPool *pgx.ConnPool) *TasksRepoImpl {
+	u := new(TasksRepoImpl)
 	u.connPool = connPool
 	return u
 }
 
-func (r *TasksRepositoryImpl) GetStatsByTask(taskId string) (*tasks.TaskStats, error) {
+func (r *TasksRepoImpl) Store(e *tasks.AddImageDto) error {
+	sql := `INSERT INTO tasks (id, dropbox_path, eventid) VALUES ($1,$2,$3)
+  INSERT INTO outbox (id, broker_topic, broker_key, broker_value) VALUES ($1,$2,$3,$4)`
+	var data []interface{}
+	outboxId := uuid.Generate().String()
+	t := e.Task
+	data = append(data, t.Id, t.DropboxPath, t.EventId, outboxId, e.BrokerTopic, e.BrokerTopic, e.TaskData)
+	return db.WithTransactionSQL(r.connPool, sql, data)
+}
+
+func (r *TasksRepoImpl) GetStatsByTask(taskId string) (*tasks.TaskStats, error) {
 	sql := r.getPictureProcessingStatusSQL()
 	var data []interface{}
 	data = append(data, taskId)
@@ -47,7 +58,7 @@ func (r *TasksRepositoryImpl) GetStatsByTask(taskId string) (*tasks.TaskStats, e
 	return &taskStatus, nil
 }
 
-func (r *TasksRepositoryImpl) scanTaskStatTime(rows *pgx.Rows, taskStatus tasks.TaskStats) (*tasks.TaskStats, error) {
+func (r *TasksRepoImpl) scanTaskStatTime(rows *pgx.Rows, taskStatus tasks.TaskStats) (*tasks.TaskStats, error) {
 	if rows.Next() {
 		err := rows.Scan(
 			&taskStatus.StartedAt,
@@ -60,7 +71,7 @@ func (r *TasksRepositoryImpl) scanTaskStatTime(rows *pgx.Rows, taskStatus tasks.
 	return nil, nil
 }
 
-func (r *TasksRepositoryImpl) scanTaskStatistic() func(rows *pgx.Rows) (interface{}, error) {
+func (r *TasksRepoImpl) scanTaskStatistic() func(rows *pgx.Rows) (interface{}, error) {
 	return func(rows *pgx.Rows) (interface{}, error) {
 		var taskStatus tasks.TaskStats
 		var item tasks.TaskStatsItem
@@ -78,7 +89,7 @@ func (r *TasksRepositoryImpl) scanTaskStatistic() func(rows *pgx.Rows) (interfac
 	}
 }
 
-func (r *TasksRepositoryImpl) GetTaskList(page *dto.Page) (*[]tasks.TaskReturnDTO, error) {
+func (r *TasksRepoImpl) GetTaskList(page *dto.Page) (*[]tasks.TaskReturnDTO, error) {
 	sql := r.getTaskListSQL()
 	var data []interface{}
 	data = append(data, page.Limit, page.Offset)
@@ -93,7 +104,7 @@ func (r *TasksRepositoryImpl) GetTaskList(page *dto.Page) (*[]tasks.TaskReturnDT
 	return r.scanTaskList(rows, err)
 }
 
-func (r *TasksRepositoryImpl) scanTaskList(rows *pgx.Rows, err error) (*[]tasks.TaskReturnDTO, error) {
+func (r *TasksRepoImpl) scanTaskList(rows *pgx.Rows, err error) (*[]tasks.TaskReturnDTO, error) {
 	var result []tasks.TaskReturnDTO
 	var task tasks.TaskReturnDTO
 	var avgRating float64
@@ -115,7 +126,7 @@ func (r *TasksRepositoryImpl) scanTaskList(rows *pgx.Rows, err error) (*[]tasks.
 	return &result, err
 }
 
-func (r *TasksRepositoryImpl) getTaskListSQL() string {
+func (r *TasksRepoImpl) getTaskListSQL() string {
 	return `SELECT task_id, p.count_images, avg_rating, started_at, last_update
                       FROM (
                                SELECT AVG(processing_status) as avg_rating, MAX(update_at) as last_update, COUNT(id) AS count_images, task_id
@@ -128,11 +139,11 @@ LIMIT $1 OFFSET $2;`
 
 }
 
-func (r *TasksRepositoryImpl) getPictureProcessingStatusSQL() string {
+func (r *TasksRepoImpl) getPictureProcessingStatusSQL() string {
 	return "SELECT processing_status, count(id) FROM pictures WHERE task_id = $1 GROUP BY processing_status;"
 }
 
-func (r *TasksRepositoryImpl) getStatisticTimeSQL() string {
+func (r *TasksRepoImpl) getStatisticTimeSQL() string {
 	return `SELECT t.started_at, MAX(update_at) AS last_updated_at
 			FROM pictures p
 				LEFT JOIN tasks t ON p.task_id = t.id

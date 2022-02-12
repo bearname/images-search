@@ -49,6 +49,7 @@ type ErrFailedDownloadDropbox struct {
 func (e *ErrFailedDownloadDropbox) Error() string {
 	return e.Err.Error()
 }
+
 func (s *SDKDownloader) GetListFolder(path string, recursive bool, isNeedFile bool) ([]string, error) {
 	folder, err := s.dbx.ListFolder(&files.ListFolderArg{
 		Path:      path,

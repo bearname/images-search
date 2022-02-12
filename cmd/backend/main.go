@@ -67,7 +67,6 @@ func main() {
 		port = "8000"
 	}
 	httpServer := server.HttpServer{}
-	killSignalChan := httpServer.GetKillSignalChan()
 
 	amqpChannel, err := rabbitmq.Dial(conf.AmqpServerURL, rabbitmq.TargetQueue)
 	if err != nil {
@@ -90,13 +89,15 @@ func main() {
 	}
 	client := s3.NewFromConfig(cfg)
 
-	handler := initHandlers(pool, amqpChannel, conf.DropboxAccessToken, conf.StripeSecretKey, client, c.AwsS3Bucket)
+	handler := initHandlers(pool, amqpChannel, conf.DropboxAccessToken, conf.StripeSecretKey, client, c.AwsS3Bucket, "addImageTopic")
+	orderRepo := postgres.NewOutboxRepo(pool)
 
+	go handleDemon(orderRepo, amqpChannel)
 	log.Println("Start on port '" + port + " 'at " + time.Now().String())
 	srv := httpServer.StartServer(port, handler)
+	killSignalChan := httpServer.GetKillSignalChan()
 	httpServer.WaitForKillSignal(killSignalChan)
 	err = srv.Shutdown(context.TODO())
-
 	log.Println("Stop at " + time.Now().String())
 
 	if err != nil {
@@ -105,11 +106,14 @@ func main() {
 	}
 }
 
-func initHandlers(connPool *pgx.ConnPool, amqpChannel *amqp.Channel, dropboxAccessToken string, stripeSecretKey string, s3Client *s3.Client, bucket string) http.Handler {
+func initHandlers(connPool *pgx.ConnPool, amqpChannel *amqp.Channel, dropboxAccessToken string, stripeSecretKey string, s3Client *s3.Client, s3Bucket, brokerAddImageTopic string) http.Handler {
 	downloader := dropbox.NewSDKDownloader(dropboxAccessToken)
 
 	pictureRepo := postgres.NewPictureRepository(connPool)
-	pictureService := picture.NewPictureService(pictureRepo, amqpChannel, downloader, s3Client, bucket) //, svc, uploader, compressor
+	tasksRepo := postgres.NewTasksRepo(connPool)
+	tasksService := tasks.NewService(tasksRepo)
+
+	pictureService := picture.NewPictureService(pictureRepo, amqpChannel, downloader, s3Client, s3Bucket, brokerAddImageTopic, tasksService) //, svc, uploader, compressor
 	pictureController := transport.NewPictureController(pictureService)
 
 	eventRepo := postgres.NewEventRepository(connPool)
@@ -121,8 +125,6 @@ func initHandlers(connPool *pgx.ConnPool, amqpChannel *amqp.Channel, dropboxAcce
 	userService := user.NewUserService(userRepo)
 	authController := transport.NewAuthController(authService)
 
-	tasksRepo := postgres.NewTasksRepositoryImpl(connPool)
-	tasksService := tasks.NewService(tasksRepo)
 	tasksController := transport.NewTasksController(tasksService)
 
 	orderRepo := postgres.NewOrderRepository(connPool)

@@ -8,13 +8,18 @@ import (
 )
 
 type ServiceImpl struct {
-	repo tasks.Repository
+	repo tasks.Repo
 }
 
-func NewService(eventRepo tasks.Repository) *ServiceImpl {
+func NewService(eventRepo tasks.Repo) *ServiceImpl {
 	s := new(ServiceImpl)
 	s.repo = eventRepo
 	return s
+}
+
+func (s *ServiceImpl) Store(task *tasks.AddImageDto) error {
+
+	return s.repo.Store(task)
 }
 
 func (s *ServiceImpl) GetTaskStatistic(taskId string) (*tasks.TaskStats, error) {

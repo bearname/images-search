@@ -57,7 +57,6 @@ func (c *CoordinatorServiceImpl) PerformAddImage(image *pictures.Picture) error 
 		if err != nil {
 			return err
 		}
-
 		isDownloaded = true
 		if metadata.Size <= MaxSize {
 			name := c.getUploadFileName(image, "origin")

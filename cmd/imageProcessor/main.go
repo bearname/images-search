@@ -12,8 +12,12 @@ import (
 	"github.com/streadway/amqp"
 	"net/http"
 	_ "net/http/pprof"
+	"os/signal"
 	"photofinish/pkg/common/util"
+	"photofinish/pkg/domain/broker"
+	"photofinish/pkg/domain/tasks"
 	"runtime"
+	"syscall"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/rekognition"
@@ -110,8 +114,9 @@ func main() {
 	fmt.Println(uploader)
 	downloader := dropbox.NewSDKDownloader(accessToken)
 	awsS3Uploader := s32.NewAwsS3Uploader(uploader, awsBucket)
-
 	pictureRepo := postgres.NewPictureRepository(pool)
+
+	outboxRepo := postgres.NewOutboxRepo(pool)
 	compressor := picture.NewImageCompressor()
 	textDetector := recognition.NewAmazonTextRecognition(svc)
 	err = pictureRepo.IsExists("1")
@@ -123,39 +128,107 @@ func main() {
 		compressor,
 		0)
 
-	dial, err := rabbitmq.Dial(amqpServerURL, rabbitmq.TargetQueue)
-	if err != nil {
-		log.Fatal(err)
-	}
-	messages, err := rabbitmq.Consume(dial, rabbitmq.TargetQueue)
-	if err != nil {
-		log.Fatal(err)
-	}
-	forever := make(chan bool)
 	wg := sync.WaitGroup{}
-	wg.Add(1)
-	ch := make(chan pictures.DropboxImage)
-	go func() {
-		defer wg.Done()
-		for message := range messages {
-			// For example, show received message in a console.
-			handleMessage(message, err, ch)
-			close(ch)
-		}
-	}()
+
+	forever := make(chan bool)
 
 	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for t := 0; t < runtime.NumCPU(); t++ {
-			wg.Add(1)
-			go handleImageAsync(ch, &wg, pictureCoordinator)
-		}
-	}()
+	const TopicImageHandle = rabbitmq.TargetQueue
+	go Consume(amqpServerURL, TopicImageHandle, processImages(&wg, err, pictureCoordinator))
+
+	const addImageQueue = "addImageQueue"
+	wg.Add(1)
+	event := handleAddNewImageEvent(&wg, amqpServerURL, TopicImageHandle, downloader, pictureRepo, outboxRepo)
+	go Consume(amqpServerURL, addImageQueue, event)
+
+	//messages, err := rabbitmq.Consume(amqpChan, rabbitmq.TargetQueue)
+	//if err != nil {
+	//    log.Fatal(err)
+	//}
+	killSignalChan := make(chan os.Signal, 1)
+	signal.Notify(killSignalChan, os.Interrupt, syscall.SIGTERM)
 
 	wg.Wait()
 
+	killSignal := <-killSignalChan
+	switch killSignal {
+	case os.Interrupt:
+		log.Println("got SIGINT...")
+	case syscall.SIGTERM:
+		log.Println("got SIGTERM...")
+	}
 	<-forever
+}
+
+func processImages(wg *sync.WaitGroup, err error, pictureCoordinator *picture.CoordinatorServiceImpl) func(messages <-chan amqp.Delivery) {
+	return func(messages <-chan amqp.Delivery) {
+		defer wg.Done()
+		wg.Add(1)
+		imagesChan := make(chan pictures.DropboxImage)
+
+		go func() {
+			defer wg.Done()
+			for message := range messages {
+				// For example, show received message in a console.
+				handleMessage(message, err, imagesChan)
+			}
+			close(imagesChan)
+		}()
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for t := 0; t < runtime.NumCPU(); t++ {
+				wg.Add(1)
+				go handleImageAsync(imagesChan, wg, pictureCoordinator)
+			}
+		}()
+	}
+}
+
+func handleAddNewImageEvent(wg *sync.WaitGroup, amqpServerURL string, topicImageHandle string, downloader *dropbox.SDKDownloader, pictureRepo pictures.Repo, outboxRepo broker.Repo) func(messages <-chan amqp.Delivery) {
+	return func(messages <-chan amqp.Delivery) {
+		defer wg.Done()
+		wg.Add(1)
+		addImageQueueChan := make(chan tasks.Task)
+		amqpChan, err := rabbitmq.Dial(amqpServerURL, topicImageHandle)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pictureProcessor := picture.NewPictureProcessor(downloader, pictureRepo, amqpChan, topicImageHandle, outboxRepo)
+
+		go func() {
+			defer wg.Done()
+			for message := range messages {
+				log.Printf(" > Received message: %s\n", message.Body)
+				var t tasks.Task
+				err = json.Unmarshal(message.Body, &t)
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+				err := pictureProcessor.PerformAddImagesToQueue(&t)
+				if err != nil {
+					log.Println(err)
+				}
+
+				time.Sleep(2 * time.Second)
+
+			}
+			close(addImageQueueChan)
+		}()
+	}
+}
+
+func Consume(amqpServerURL, queueName string, fn func(<-chan amqp.Delivery)) {
+	amqpChan, err := rabbitmq.Dial(amqpServerURL, rabbitmq.TargetQueue)
+	if err != nil {
+		log.Fatal(err)
+	}
+	messages, err := rabbitmq.Consume(amqpChan, queueName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fn(messages)
 }
 
 func handleMessage(message amqp.Delivery, err error, ch chan pictures.DropboxImage) {

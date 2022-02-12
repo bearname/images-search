@@ -5,4 +5,4 @@ COPY ./dist ./app/bin/web
 RUN chmod +x /app/bin/imageProcessor
 WORKDIR /app
 RUN apk --no-cache add ca-certificates
-CMD ["/app/bin/imageProcessor", "-d", "false", "-log", "false"]
+CMD ["/app/bin/imageProcessor",  "-d=true", "-log=false"]

@@ -2,6 +2,11 @@
 [Available at](https://damp-lake-99927.herokuapp.com/)
 [Available at ](https://thawing-sea-83431.herokuapp.com/)
 
+## Pattern 
+#### Orchestration saga  
+#### Transactional outbox 
+
+
 ## Setting Credentials
 Setting your credentials for use by the AWS SDK can be done in a number of ways,  
 but here are the recommended approaches:
@@ -40,11 +45,11 @@ Open http://localhost:3000
 ![Components](./docs/images/components.png)
 
 ### Sequence Diagram
-![Sequence Diagram](./docs/images/sequence-diagram.png)
+![Search](./docs/images/sequence-diagram-search.png)
+![Add](./docs/images/sequence-diagram-add.png)
+![Add](./docs/images/sequence-diagram-pay.png)
 
 
-### Needed 
-![Sequence Diagram](./docs/Architecture%20-%20Copy.png)
 
 
 Шаги при добавлении новых изображений:
