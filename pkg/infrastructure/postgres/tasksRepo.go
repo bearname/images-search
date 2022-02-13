@@ -101,13 +101,14 @@ func (r *TasksRepoImpl) GetTaskList(page *dto.Page) (*[]tasks.TaskReturnDTO, err
 	if rows.Err() != nil {
 		return nil, rows.Err()
 	}
-	return r.scanTaskList(rows, err)
+	return r.scanTaskList(rows)
 }
 
-func (r *TasksRepoImpl) scanTaskList(rows *pgx.Rows, err error) (*[]tasks.TaskReturnDTO, error) {
+func (r *TasksRepoImpl) scanTaskList(rows *pgx.Rows) (*[]tasks.TaskReturnDTO, error) {
 	var result []tasks.TaskReturnDTO
 	var task tasks.TaskReturnDTO
 	var avgRating float64
+	var err error
 	for rows.Next() {
 		err = rows.Scan(
 			&task.Id,

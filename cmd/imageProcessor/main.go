@@ -130,7 +130,8 @@ func main() {
 
 	wg.Add(1)
 	const TopicImageHandle = rabbitmq.TargetQueue
-	go consume(amqpServerURL, TopicImageHandle, processImages(&wg, err, pictureCoordinator))
+	images := processImages(&wg, pictureCoordinator)
+	go consume(amqpServerURL, TopicImageHandle, images)
 
 	const addImageQueue = "addImageQueue"
 	wg.Add(1)
@@ -152,7 +153,7 @@ func main() {
 	<-forever
 }
 
-func processImages(wg *sync.WaitGroup, err error, pictureCoordinator *picture.CoordinatorServiceImpl) func(messages <-chan amqp.Delivery) {
+func processImages(wg *sync.WaitGroup, pictureCoordinator *picture.CoordinatorServiceImpl) func(messages <-chan amqp.Delivery) {
 	return func(messages <-chan amqp.Delivery) {
 		defer wg.Done()
 		wg.Add(1)
@@ -161,7 +162,7 @@ func processImages(wg *sync.WaitGroup, err error, pictureCoordinator *picture.Co
 		go func() {
 			defer wg.Done()
 			for message := range messages {
-				handleMessage(message, err, imagesChan)
+				handleMessage(message, imagesChan)
 			}
 			close(imagesChan)
 		}()
@@ -223,11 +224,11 @@ func consume(amqpServerURL, queueName string, fn func(<-chan amqp.Delivery)) {
 	fn(messages)
 }
 
-func handleMessage(message amqp.Delivery, err error, ch chan pictures.DropboxImage) {
+func handleMessage(message amqp.Delivery, ch chan pictures.DropboxImage) {
 	log.Printf(" > Received message: %s\n", message.Body)
 	var initial pictures.DropboxImages
 
-	err = json.Unmarshal(message.Body, &initial)
+	err := json.Unmarshal(message.Body, &initial)
 	if err != nil {
 		log.Println(err)
 		return
@@ -241,6 +242,8 @@ func handleMessage(message amqp.Delivery, err error, ch chan pictures.DropboxIma
 }
 
 func handleImageAsync(ch chan pictures.DropboxImage, wg *sync.WaitGroup, pictureCoordinator pictures.CoordinatorService) {
+	defer wg.Done()
+
 	for img := range ch {
 		p := pictures.Picture{
 			Id:              img.Id,
@@ -256,7 +259,6 @@ func handleImageAsync(ch chan pictures.DropboxImage, wg *sync.WaitGroup, picture
 			log.Println("success", p)
 		}
 	}
-	wg.Done()
 }
 
 func init() {
