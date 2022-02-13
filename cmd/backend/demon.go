@@ -38,24 +38,19 @@ func publish(outboxRepo broker.Repo, list *[]broker.Outbox, amqpChannel *amqp.Ch
 		t.TaskData = value
 
 		data, err = json.Marshal(t)
-		//err = s.tasksService.Store(&t)
 		if err != nil {
 			err = outboxRepo.UpdateStatus(outbox.Id.String(), broker.OutboxNotProcessing)
 			continue
 		}
-		message := amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        data,
-		}
-
-		err = rabbitmq.Publish(amqpChannel, outbox.BrokerTopic, message)
+		err = rabbitmq.PublishToQueue(amqpChannel, outbox.BrokerTopic, data)
 		if err != nil {
 			time.Sleep(2 * time.Second)
-			err = rabbitmq.Publish(amqpChannel, outbox.BrokerTopic, message)
+			err = rabbitmq.PublishToQueue(amqpChannel, outbox.BrokerTopic, data)
 			if err != nil {
 				status = broker.OutboxNotProcessing
 			}
 		}
+
 		status = broker.OutboxProcessing
 		err = outboxRepo.UpdateStatus(outbox.Id.String(), status)
 		if err != nil {

@@ -50,14 +50,6 @@ func (s *ServiceImpl) Create(imageTextDetectionDto *pictures.TextDetectionOnImag
 }
 
 func (s *ServiceImpl) DetectImageFromUrl(dropboxPath string, eventId int) (*pictures.TaskResponse, error) {
-	//TODO
-	// type AddImagesEvent struct {
-	//    DropboxPath string
-	//    EventId string
-	// }
-	//  in transaction
-	//     insert into tasks (id, dropbox_path, eventid) values ($1,$2,$3)
-	//     insert into outbox (id, broker_topic, broker_key, broker_value) VALUES ($1,$2,$3,$4)
 	taskId := uuid.Generate().String()
 	task := tasks.Task{
 		Id:          taskId,
@@ -81,35 +73,8 @@ func (s *ServiceImpl) DetectImageFromUrl(dropboxPath string, eventId int) (*pict
 	if err != nil {
 		return nil, err
 	}
-	message := amqp.Publishing{
-		ContentType: "text/plain",
-		Body:        data,
-	}
-	err = rabbitmq.Publish(s.amqpChannel, s.addNewImagesTopic, message)
+	err = rabbitmq.PublishToQueue(s.amqpChannel, s.addNewImagesTopic, data)
 	return &pictures.TaskResponse{TaskId: taskId}, err
-
-	//images, err := s.downloader.GetListFolder(dropboxPath, true, true)
-	//if err != nil {
-	//    return nil, err
-	//}
-	//image := pictures.InitialDropboxImage{
-	//    Images: images, EventId: eventId, Path: dropboxPath,
-	//}
-	//
-	//result, err := (*s.pictureRepo).SaveInitialPictures(&image)
-	//if err != nil {
-	//    return nil, err
-	//
-	//}
-	//var dropboxImages pictures.DropboxImages
-	//dropboxImages.EventId = eventId
-	//id := result.ImagesId
-	//for i, img := range images {
-	//    dropboxImages.Images = append(dropboxImages.Images, pictures.DropboxImage{
-	//        Path: img,
-	//        Id:   id[i],
-	//    })
-	//}
 	//TODO
 	// type TaskData struct {
 	//  TaskId int
@@ -160,22 +125,6 @@ func (s *ServiceImpl) DetectImageFromUrl(dropboxPath string, eventId int) (*pict
 	//  .
 	//  .
 	//  . вывод списка task на фронте по клике на кнопку "задачи"
-	//
-
-	//data, err := json.Marshal(dropboxImages)
-	//if err != nil {
-	//    return nil, err
-	//}
-	//message := amqp.Publishing{
-	//    ContentType: "text/plain",
-	//    Body:        data,
-	//}
-	//
-	//return &pictures.TaskStatResponse{
-	//    TaskId:          result.TaskId.String(),
-	//    CountAllImages:  len(images),
-	//    CompletedImages: 0,
-	//}, rabbitmq.Publish(s.amqpChannel, rabbitmq.Im, message)
 }
 
 func (s *ServiceImpl) Search(dto *pictures.SearchPictureDto) (*pictures.SearchPictureResultDto, error) {
@@ -183,7 +132,7 @@ func (s *ServiceImpl) Search(dto *pictures.SearchPictureDto) (*pictures.SearchPi
 }
 
 func (s *ServiceImpl) GetDropboxFolders() ([]string, error) {
-	return s.downloader.GetListFolder("", false, false)
+	return s.downloader.GetListFolder("")
 }
 
 func (s *ServiceImpl) Delete(pictureId string) error {

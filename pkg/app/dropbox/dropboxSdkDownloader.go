@@ -1,7 +1,6 @@
 package dropbox
 
 import (
-	"fmt"
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox"
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox/files"
 	log "github.com/sirupsen/logrus"
@@ -26,7 +25,7 @@ func NewSDKDownloader(accessToken string) *SDKDownloader {
 	//}
 	conf := dropbox.Config{
 		Token:    accessToken,
-		LogLevel: dropbox.LogInfo, // if needed, set the desired logging level. Default is off
+		LogLevel: dropbox.LogInfo,
 	}
 
 	s := new(SDKDownloader)
@@ -50,7 +49,15 @@ func (e *ErrFailedDownloadDropbox) Error() string {
 	return e.Err.Error()
 }
 
-func (s *SDKDownloader) GetListFolder(path string, recursive bool, isNeedFile bool) ([]string, error) {
+func (s *SDKDownloader) GetListFiles(dropboxPath string) ([]string, error) {
+	return s.getListFolder(dropboxPath, true, true)
+}
+
+func (s *SDKDownloader) GetListFolder(dropboxPath string) ([]string, error) {
+	return s.getListFolder(dropboxPath, false, false)
+}
+
+func (s *SDKDownloader) getListFolder(path string, recursive bool, isNeedFile bool) ([]string, error) {
 	folder, err := s.dbx.ListFolder(&files.ListFolderArg{
 		Path:      path,
 		Recursive: recursive,
@@ -106,11 +113,11 @@ func (s *SDKDownloader) fillResult(fileList []string, folder *files.ListFolderRe
 func (s *SDKDownloader) DownloadFile(path string) (*files.FileMetadata, *[]byte, error) {
 	fileMetadata, content, err := s.dbx.Download(&files.DownloadArg{Path: path})
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, nil, &ErrFailedDownloadDropbox{Err: err}
 	}
 	defer func(content io.ReadCloser) {
-		err := content.Close()
+		err = content.Close()
 		if err != nil {
 			return
 		}

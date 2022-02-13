@@ -47,9 +47,6 @@ func main() {
 	}
 
 	conf := c
-	fmt.Println("\n\n\n\n\n\n\n\nconf.DropboxAccessToken")
-	fmt.Println(conf.DropboxAccessToken)
-	fmt.Println("\n\n\n\n\n\n\n\nconf.DropboxAccessToken")
 	url := db.GetUrl(conf.DbUser, conf.DbPassword, conf.DbAddress, conf.DbName)
 	connector, err := db.GetDBConfig(url, conf.MaxConnections, conf.AcquireTimeout)
 
@@ -227,8 +224,7 @@ func init() {
 	})
 
 	if err != nil {
-
-		fmt.Println("Error while creating session,", err)
+		log.Println("Error while creating session,", err)
 		return
 	}
 

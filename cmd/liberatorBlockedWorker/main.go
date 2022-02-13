@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"github.com/jackc/pgx"
 	log "github.com/sirupsen/logrus"
 	"os"
@@ -52,13 +51,13 @@ func main() {
 	}
 
 	for {
-		fmt.Println("getSqlReleaseBlockPicture()")
+		log.Println("getSqlReleaseBlockPicture()")
 		err = db.WithTransaction(pool, func(tx *pgx.Tx) error {
 			var data []interface{}
 			data = append(data, pictures.Failed, pictures.Processing)
 			_, err = tx.Exec(getSqlReleaseBlockPicture(), data...)
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 			}
 			return err
 		})

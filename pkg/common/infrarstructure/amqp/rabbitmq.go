@@ -60,3 +60,16 @@ func Publish(channel *amqp.Channel, queueName string, message amqp.Publishing) e
 		message,   // message to publish
 	)
 }
+
+func PublishToQueue(channel *amqp.Channel, queueName string, data []byte) error {
+	message := amqp.Publishing{
+		ContentType: "text/plain",
+		Body:        data,
+	}
+
+	err := Publish(channel, queueName, message)
+	if err != nil {
+		return err
+	}
+	return err
+}

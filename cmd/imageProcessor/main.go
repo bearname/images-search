@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -42,7 +41,6 @@ var svc *rekognition.Rekognition
 
 func main() {
 	util.LoadEnvFileIfNeeded()
-
 	go func() {
 		err := http.ListenAndServe("0.0.0.0:8081", nil)
 		if err != nil {
@@ -106,12 +104,10 @@ func main() {
 	}
 	pool, err := db.NewConnectionPool(connector)
 
-	fmt.Println(pool)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	fmt.Println(uploader)
 	downloader := dropbox.NewSDKDownloader(accessToken)
 	awsS3Uploader := s32.NewAwsS3Uploader(uploader, awsBucket)
 	pictureRepo := postgres.NewPictureRepository(pool)
@@ -134,17 +130,13 @@ func main() {
 
 	wg.Add(1)
 	const TopicImageHandle = rabbitmq.TargetQueue
-	go Consume(amqpServerURL, TopicImageHandle, processImages(&wg, err, pictureCoordinator))
+	go consume(amqpServerURL, TopicImageHandle, processImages(&wg, err, pictureCoordinator))
 
 	const addImageQueue = "addImageQueue"
 	wg.Add(1)
 	event := handleAddNewImageEvent(&wg, amqpServerURL, TopicImageHandle, downloader, pictureRepo, outboxRepo)
-	go Consume(amqpServerURL, addImageQueue, event)
+	go consume(amqpServerURL, addImageQueue, event)
 
-	//messages, err := rabbitmq.Consume(amqpChan, rabbitmq.TargetQueue)
-	//if err != nil {
-	//    log.Fatal(err)
-	//}
 	killSignalChan := make(chan os.Signal, 1)
 	signal.Notify(killSignalChan, os.Interrupt, syscall.SIGTERM)
 
@@ -169,7 +161,6 @@ func processImages(wg *sync.WaitGroup, err error, pictureCoordinator *picture.Co
 		go func() {
 			defer wg.Done()
 			for message := range messages {
-				// For example, show received message in a console.
 				handleMessage(message, err, imagesChan)
 			}
 			close(imagesChan)
@@ -189,37 +180,38 @@ func handleAddNewImageEvent(wg *sync.WaitGroup, amqpServerURL string, topicImage
 	return func(messages <-chan amqp.Delivery) {
 		defer wg.Done()
 		wg.Add(1)
-		addImageQueueChan := make(chan tasks.Task)
 		amqpChan, err := rabbitmq.Dial(amqpServerURL, topicImageHandle)
 		if err != nil {
 			log.Fatal(err)
 		}
 		pictureProcessor := picture.NewPictureProcessor(downloader, pictureRepo, amqpChan, topicImageHandle, outboxRepo)
 
-		go func() {
-			defer wg.Done()
-			for message := range messages {
-				log.Printf(" > Received message: %s\n", message.Body)
-				var t tasks.Task
-				err = json.Unmarshal(message.Body, &t)
-				if err != nil {
-					log.Println(err)
-					continue
-				}
-				err := pictureProcessor.PerformAddImagesToQueue(&t)
-				if err != nil {
-					log.Println(err)
-				}
-
-				time.Sleep(2 * time.Second)
-
-			}
-			close(addImageQueueChan)
-		}()
+		go handleMessages(wg, messages, pictureProcessor)
 	}
 }
 
-func Consume(amqpServerURL, queueName string, fn func(<-chan amqp.Delivery)) {
+func handleMessages(wg *sync.WaitGroup, messages <-chan amqp.Delivery, pictureProcessor *picture.ProcessorImpl) {
+	defer wg.Done()
+	var err error
+	var t tasks.Task
+
+	for message := range messages {
+		log.Printf(" > Received message: %s\n", message.Body)
+		err = json.Unmarshal(message.Body, &t)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		err = pictureProcessor.PerformAddImagesToQueue(&t)
+		if err != nil {
+			log.Println(err)
+		}
+
+		time.Sleep(2 * time.Second)
+	}
+}
+
+func consume(amqpServerURL, queueName string, fn func(<-chan amqp.Delivery)) {
 	amqpChan, err := rabbitmq.Dial(amqpServerURL, rabbitmq.TargetQueue)
 	if err != nil {
 		log.Fatal(err)
@@ -240,9 +232,8 @@ func handleMessage(message amqp.Delivery, err error, ch chan pictures.DropboxIma
 		log.Println(err)
 		return
 	}
-	fmt.Println(len(initial.Images))
+	log.Println(len(initial.Images))
 	time.Sleep(2 * time.Second)
-	//id := initial.EventId
 
 	for _, image := range initial.Images {
 		ch <- image
@@ -257,15 +248,13 @@ func handleImageAsync(ch chan pictures.DropboxImage, wg *sync.WaitGroup, picture
 			EventId:         img.EventId,
 			IsOriginalSaved: false,
 		}
-		fmt.Println(p)
+		log.Println(p)
 		err := pictureCoordinator.PerformAddImage(&p)
 		if err != nil {
 			log.Println(err)
 		} else {
-			fmt.Println("success")
-			fmt.Println(p)
+			log.Println("success", p)
 		}
-
 	}
 	wg.Done()
 }
@@ -277,7 +266,7 @@ func init() {
 	})
 
 	if err != nil {
-		fmt.Println("Error while creating session,", err)
+		log.Println("Error while creating session,", err)
 		return
 	}
 

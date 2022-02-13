@@ -5,6 +5,7 @@ import (
 )
 
 type Downloader interface {
-	GetListFolder(path string, recursive bool, isNeedFile bool) ([]string, error)
+	GetListFiles(dropboxPath string) ([]string, error)
+	GetListFolder(path string) ([]string, error)
 	DownloadFile(path string) (*files.FileMetadata, *[]byte, error)
 }

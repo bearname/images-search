@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -22,7 +21,6 @@ import (
 	"photofinish/pkg/common/util"
 	"photofinish/pkg/domain/pictures"
 	"photofinish/pkg/infrastructure/postgres"
-	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -84,14 +82,11 @@ func main() {
 		log.Fatal(err.Error())
 	}
 	pool, err := db.NewConnectionPool(connector)
-
-	fmt.Println(pool)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
 	downloader := dropbox.NewSDKDownloader(accessToken)
-	//awsS3Uploader := s32.NewMockUploader()
 	awsS3Uploader := s32.NewAwsS3Uploader(uploader, awsBucket)
 
 	pictureRepo := postgres.NewPictureRepository(pool)
@@ -116,8 +111,6 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		cpu := runtime.NumCPU()
-		fmt.Println("num cpu", cpu)
 		for t := 0; t < 10; t++ {
 			wg.Add(1)
 			go handleImageAsync(ch, &wg, pictureCoordinator)
@@ -128,8 +121,7 @@ func main() {
 
 	cron(5*time.Minute, func() error {
 		defer wg.Done()
-		ch = make(chan pictures.Picture)
-		pictureList, err := getUnhandledPictures(pool, sql, ch)
+		pictureList, err := getUnhandledPictures(pool, sql)
 		if err != nil {
 			log.Error(err)
 			return err
@@ -143,13 +135,13 @@ func main() {
 		return nil
 	})
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	wg.Wait()
 }
 
-func getUnhandledPictures(pool *pgx.ConnPool, sql string, ch chan pictures.Picture) ([]pictures.Picture, error) {
+func getUnhandledPictures(pool *pgx.ConnPool, sql string) ([]pictures.Picture, error) {
 	var pictureList []pictures.Picture
 	err := db.WithTransaction(pool, func(tx *pgx.Tx) error {
 		var data []interface{}
@@ -179,7 +171,6 @@ func getUnhandledPictures(pool *pgx.ConnPool, sql string, ch chan pictures.Pictu
 				return err
 			}
 
-			fmt.Println(len(ch))
 			pictureList = append(pictureList, img)
 		}
 
@@ -214,20 +205,18 @@ var rw sync.Mutex
 var i int
 
 func handleImageAsync(ch chan pictures.Picture, wg *sync.WaitGroup, pictureCoordinator pictures.CoordinatorService) {
-	fmt.Println(len(ch))
-
 	for img := range ch {
 		err := pictureCoordinator.PerformAddImage(&img)
 		if err != nil {
 			log.Println("error", err)
 		} else {
-			fmt.Println("success")
+			log.Println("success", img)
 		}
 
 		rw.Lock()
 		i++
 		rw.Unlock()
-		fmt.Println(i)
+		log.Println(i)
 	}
 
 	wg.Done()
@@ -240,7 +229,7 @@ func init() {
 	})
 
 	if err != nil {
-		fmt.Println("Error while creating session,", err)
+		log.Println("Error while creating session,", err)
 		return
 	}
 
