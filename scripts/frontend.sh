@@ -6,6 +6,6 @@ cd frontend
 npm install
 npm run build
 ls ./
-cp -r ./frontend/dist ../dist
+cp -r ./dist ../dist
 cd ..
 ls ./
