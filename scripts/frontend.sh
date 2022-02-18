@@ -6,5 +6,5 @@ cd frontend
 npm install
 npm run build
 cd ..
-copy -r frontend/dist dist
+cp -r frontend/dist dist
 
