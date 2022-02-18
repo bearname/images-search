@@ -27,7 +27,6 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-
       - name: Install Go
         uses: actions/setup-go@v2
         with:
@@ -38,30 +37,28 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+#      - name: script allow
+#        run: rm -rf frontend
+#      - name: script allow
+#        run: rm -rf dist
+#      - name: script allow
+#        run: git clone https://github.com/col3name/images-search-frontend frontend
+#      - name: script allow
+#        run: cd frontend
+#      - name: script allow
+#        run: npm install
+#      - name: script allow
+#        run: npm run build
+#      - name: script allow
+#        run: cd ..
       - name: script allow
-        run: rm -rf frontend
-      - name: script allow
-        run: rm -rf dist
-      - name: script allow
-        run: git clone https://github.com/col3name/images-search-frontend frontend
-      - name: script allow
-        run: cd frontend
-      - name: script allow
-        run: npm install
-      - name: script allow
-        run: npm run build
-      - name: script allow
-        run: cd ..
-      - name: script allow
-        run: copy -r frontend/dist dist
+        run: ./scripts/frontend.sh
 
       - name: Checkout code
         uses: actions/checkout@v2
 
       - name: Fetch required Go modules
         run: go mod download
-
-      - name: Clone frontend
 
       - name: Build
         run: make build
