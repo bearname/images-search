@@ -39,7 +39,21 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: script allow
-        run: chmod +x ./scripts/frontend.sh
+        run: rm -rf frontend
+      - name: script allow
+        run: rm -rf dist
+      - name: script allow
+        run: git clone https://github.com/col3name/images-search-frontend frontend
+      - name: script allow
+        run: cd frontend
+      - name: script allow
+        run: npm install
+      - name: script allow
+        run: npm run build
+      - name: script allow
+        run: cd ..
+      - name: script allow
+        run: copy -r frontend/dist dist
 
       - name: setup frontend
         run: ./scripts/frontend.sh
