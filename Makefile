@@ -7,6 +7,7 @@ build:
 	set GOARCH=amd64
 	set GOOS=linux
 	set CGO_ENABLED=0
+	pwd
 	go build -o bin/imageProcessor cmd/imageProcessor/main.go
 	go build -o bin/liberatorBlockedWorker cmd/liberatorBlockedWorker/main.go
 	go build -o bin/rawImageHandler cmd/rawImageHandler/main.go
