@@ -38,7 +38,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: setup frontend
-        run: ./setup.sh
+        run: ./scripts/frontend.sh
 
       - name: Checkout code
         uses: actions/checkout@v2
