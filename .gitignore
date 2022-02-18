@@ -4,7 +4,6 @@
 bin/
 node_modules
 payment
-frontend/
 frontend/node_modules/
 frontend/package-lock.json
 cmd/aws-test/
