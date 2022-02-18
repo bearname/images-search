@@ -13,6 +13,11 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+env:
+  BACK_IMAGE: photoservice
+  IMG_PROCESSOR: image-processor
+  LIBERATOR_BLOCKED_WORKER: liberatorBlockedWorker
+  RAW_IMAGE_HANDLER: rawImageHandler
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -37,20 +42,20 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-#      - name: script allow
-#        run: rm -rf frontend
-#      - name: script allow
-#        run: rm -rf dist
-#      - name: script allow
-#        run: git clone https://github.com/col3name/images-search-frontend frontend
-#      - name: script allow
-#        run: cd frontend
-#      - name: script allow
-#        run: npm install
-#      - name: script allow
-#        run: npm run build
-#      - name: script allow
-#        run: cd ..
+      #      - name: script allow
+      #        run: rm -rf frontend
+      #      - name: script allow
+      #        run: rm -rf dist
+      #      - name: script allow
+      #        run: git clone https://github.com/col3name/images-search-frontend frontend
+      #      - name: script allow
+      #        run: cd frontend
+      #      - name: script allow
+      #        run: npm install
+      #      - name: script allow
+      #        run: npm run build
+      #      - name: script allow
+      #        run: cd ..
 
       - name: Checkout code
         uses: actions/checkout@v2
@@ -79,53 +84,47 @@ jobs:
         run: ls && pwd && lscpu && free
 
       - name: build containers
-        run: docker build -f Dockerfile -t ${{ secrets.DOCKER_HUB_USERNAME }}/photoservice .
+        run: docker build -f Dockerfile -t ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $BACK_IMAGE) .
       - name: build containers
-        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/photoservice
+        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $BACK_IMAGE)
       - name: build containers imageProcessor
-        run: docker build -f Dockerfile-imageProcessor -t ${{ secrets.DOCKER_HUB_USERNAME }}/imageProcessor .
-      - name: build containers
-        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/imageProcessor
+        run: docker build -f Dockerfile-imageProcessor -t ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $IMG_PROCESSOR} . && docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $IMG_PROCESSOR}
       - name: build containers liberatorBlockedWorker
-        run: docker build -f Dockerfile-liberatorBlockedWorker -t ${{ secrets.DOCKER_HUB_USERNAME }}/liberatorBlockedWorker .
-      - name: build containers
-        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/liberatorBlockedWorker
+        run: docker build -f Dockerfile-liberatorBlockedWorker -t ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $LIBERATOR_BLOCKED_WORKER} . && docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $LIBERATOR_BLOCKED_WORKER}
       - name: build containers rawImageHandler
-        run: docker build -f Dockerfile-rawImageHandler -t ${{ secrets.DOCKER_HUB_USERNAME }}/rawImageHandler .
-      - name: build containers
-        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/rawImageHandler
+        run: docker build -f Dockerfile-rawImageHandler -t ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $RAW_IMAGE_HANDLER} . &&docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $RAW_IMAGE_HANDLER}
 
-#      - name: Build and push Docker image
-#        run: docker push
-#      id: docker_build
-#      uses: docker/build-push-action@v2
-#          with:
-#            push: true
-#            tags: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ github.event.repository.name }}:latest
+      #      - name: Build and push Docker image
+      #        run: docker push
+      #      id: docker_build
+      #      uses: docker/build-push-action@v2
+      #          with:
+      #            push: true
+      #            tags: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ github.event.repository.name }}:latest
 
 
-#      - name: Cache Docker layers
-#        uses: actions/cache@v2
-#        with:
-#          path: /tmp/.buildx-cache
-#          key: ${{ runner.os }}-buildx-${{ github.sha }}
-#          restore-keys: |
-#            ${{ runner.os }}-buildx-
-#      - name: Build Docker image
-#        uses: docker/build-push-action@v2
-#        with:
-#          push: false
-#          tags: ${{ github.event.repository.name }}:latest, ${{ github.repository }}:latest
+      #      - name: Cache Docker layers
+      #        uses: actions/cache@v2
+      #        with:
+      #          path: /tmp/.buildx-cache
+      #          key: ${{ runner.os }}-buildx-${{ github.sha }}
+      #          restore-keys: |
+      #            ${{ runner.os }}-buildx-
+      #      - name: Build Docker image
+      #        uses: docker/build-push-action@v2
+      #        with:
+      #          push: false
+      #          tags: ${{ github.event.repository.name }}:latest, ${{ github.repository }}:latest
 
       #      - name: Build Docker image
-#        uses: docker/build-push-action@v2
-#        with:
-#          builder: ${{ steps.buildx.outputs.name }}
-#          push: false
-#          load: true
-#          tags: ${{ github.event.repository.name }}:latest, ${{ github.repository }}:latest
-#          cache-from: type=local,src=/tmp/.buildx-cache
-#          cache-to: type=local,dest=/tmp/.buildx-cache
+      #        uses: docker/build-push-action@v2
+      #        with:
+      #          builder: ${{ steps.buildx.outputs.name }}
+      #          push: false
+      #          load: true
+      #          tags: ${{ github.event.repository.name }}:latest, ${{ github.repository }}:latest
+      #          cache-from: type=local,src=/tmp/.buildx-cache
+      #          cache-to: type=local,dest=/tmp/.buildx-cache
 
       - name: Run functional tests
         run: go test -v ./...
