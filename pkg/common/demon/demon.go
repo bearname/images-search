@@ -19,6 +19,7 @@ func HandleDemon(outboxRepo broker.Repo, amqpChannel *rabbitmq.Service) {
 		time.Sleep(1 * time.Minute)
 	}
 }
+
 func publish(outboxRepo broker.Repo, list *[]broker.Outbox, amqpChannel *rabbitmq.Service) {
 	var task tasks.Task
 	var t tasks.AddImageDto
