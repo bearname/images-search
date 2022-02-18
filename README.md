@@ -1,3 +1,5 @@
+[![CI](https://github.com/col3name/images-search/actions/workflows/dev.yml/badge.svg)](https://github.com/col3name/images-search/actions/workflows/dev.yml)
+
 # Simple face recognizer
 [Available at](https://damp-lake-99927.herokuapp.com/)
 [Available at ](https://thawing-sea-83431.herokuapp.com/)

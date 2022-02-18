@@ -76,7 +76,7 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - name: debug
-        run: ls && pwd
+        run: ls && pwd && lscpu && free
 
       - name: build containers
         run: docker build -f Dockerfile -t ${{ secrets.DOCKER_HUB_USERNAME }}/photoservice .
