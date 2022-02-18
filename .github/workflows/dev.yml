@@ -88,11 +88,11 @@ jobs:
       - name: build containers
         run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $BACK_IMAGE)
       - name: build containers imageProcessor
-        run: docker build -f Dockerfile-imageProcessor -t ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $IMG_PROCESSOR} . && docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $IMG_PROCESSOR}
+        run: docker build -f Dockerfile-imageProcessor -t ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $IMG_PROCESSOR) . && docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $IMG_PROCESSOR)
       - name: build containers liberatorBlockedWorker
-        run: docker build -f Dockerfile-liberatorBlockedWorker -t ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $LIBERATOR_BLOCKED_WORKER} . && docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $LIBERATOR_BLOCKED_WORKER}
+        run: docker build -f Dockerfile-liberatorBlockedWorker -t ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $LIBERATOR_BLOCKED_WORKER) . && docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $LIBERATOR_BLOCKED_WORKER)
       - name: build containers rawImageHandler
-        run: docker build -f Dockerfile-rawImageHandler -t ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $RAW_IMAGE_HANDLER} . &&docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $RAW_IMAGE_HANDLER}
+        run: docker build -f Dockerfile-rawImageHandler -t ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $RAW_IMAGE_HANDLER) . &&docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $RAW_IMAGE_HANDLER)
 
       #      - name: Build and push Docker image
       #        run: docker push
