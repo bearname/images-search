@@ -18,6 +18,7 @@ import (
 	"photofinish/pkg/app/picture"
 	"photofinish/pkg/app/tasks"
 	"photofinish/pkg/app/user"
+	demon2 "photofinish/pkg/common/demon"
 	rabbitmq "photofinish/pkg/common/infrarstructure/amqp"
 	"photofinish/pkg/common/infrarstructure/db"
 	"photofinish/pkg/common/infrarstructure/server"
@@ -47,7 +48,6 @@ func main() {
 	conf := c
 	url := db.GetUrl(conf.DbUser, conf.DbPassword, conf.DbAddress, conf.DbName)
 	connector, err := db.GetDBConfig(url, conf.MaxConnections, conf.AcquireTimeout)
-
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -82,7 +82,7 @@ func main() {
 	orderRepo := postgres.NewOutboxRepo(pool)
 
 	amqpService := rabbitmq.NewAmqpService(amqpChannel)
-	go handleDemon(orderRepo, amqpService)
+	go demon2.HandleDemon(orderRepo, amqpService)
 	log.Println("Start on port '" + port + " 'at " + time.Now().String())
 	srv := httpServer.StartServer(port, handler)
 	killSignalChan := httpServer.GetKillSignalChan()
