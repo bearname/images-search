@@ -8,4 +8,5 @@ npm run build
 ls ./
 cp -r ./dist ../dist
 cd ..
+pwd
 ls ./
