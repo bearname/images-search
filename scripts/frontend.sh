@@ -7,4 +7,3 @@ npm install
 npm run build
 cd ..
 cp -r frontend/dist dist
-
