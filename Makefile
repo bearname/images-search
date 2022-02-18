@@ -12,6 +12,7 @@ build:
 	go build -o bin/liberatorBlockedWorker cmd/liberatorBlockedWorker/main.go
 	go build -o bin/rawImageHandler cmd/rawImageHandler/main.go
 	go build -o bin/photoservice cmd/backend/main.go
+	ls
 
 buildWin:
 	set GOARCH=amd64
