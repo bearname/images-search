@@ -55,9 +55,6 @@ jobs:
       - name: script allow
         run: copy -r frontend/dist dist
 
-      - name: setup frontend
-        run: ./scripts/frontend.sh
-
       - name: Checkout code
         uses: actions/checkout@v2
 
