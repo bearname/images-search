@@ -1,8 +1,9 @@
 FROM alpine
 
 ADD ./bin/photoservice /app/bin/photoservice
-
-COPY /home/runner/work/images-search/images-search/dist ./app/bin/web
+RUN ls
+RUN pwd
+COPY ./dist ./app/bin/web
 RUN chmod +x /app/bin/photoservice
 WORKDIR /app
 RUN apk --no-cache add ca-certificates
