@@ -3,6 +3,7 @@ package tasks
 import (
 	"github.com/pkg/errors"
 	"photofinish/pkg/common/util"
+	"photofinish/pkg/domain/domainerror"
 	"photofinish/pkg/domain/dto"
 	"photofinish/pkg/domain/tasks"
 )
@@ -18,7 +19,9 @@ func NewService(eventRepo tasks.Repo) *ServiceImpl {
 }
 
 func (s *ServiceImpl) Store(task *tasks.AddImageDto) error {
-
+	if task == nil {
+		return domainerror.ErrNilObject
+	}
 	return s.repo.Store(task)
 }
 

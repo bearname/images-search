@@ -2,7 +2,6 @@ package picture
 
 import (
 	"encoding/json"
-	"github.com/streadway/amqp"
 	"photofinish/pkg/app/dropbox"
 	rabbitmq "photofinish/pkg/common/infrarstructure/amqp"
 	"photofinish/pkg/domain/broker"
@@ -17,14 +16,14 @@ type Processor interface {
 type ProcessorImpl struct {
 	downloader           *dropbox.SDKDownloader
 	pictureRepo          pictures.Repo
-	amqpChannel          *amqp.Channel
+	amqpChannel          rabbitmq.BrokerService
 	topicImageProcessing string
 	outboxRepo           broker.Repo
 }
 
 func NewPictureProcessor(downloader *dropbox.SDKDownloader,
 	pictureRepo pictures.Repo,
-	amqpChannel *amqp.Channel,
+	amqpChannel rabbitmq.BrokerService,
 	topicImageProcessing string,
 	outboxRepo broker.Repo) *ProcessorImpl {
 	p := new(ProcessorImpl)
@@ -46,7 +45,7 @@ func (s *ProcessorImpl) PerformAddImagesToQueue(t *tasks.Task) error {
 	if err != nil {
 		return err
 	}
-	err = rabbitmq.PublishToQueue(s.amqpChannel, s.topicImageProcessing, data)
+	err = s.amqpChannel.PublishToQueue(s.topicImageProcessing, data)
 	if err != nil {
 		return err
 	}

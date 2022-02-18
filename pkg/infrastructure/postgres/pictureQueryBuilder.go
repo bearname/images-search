@@ -93,6 +93,7 @@ func (s *pictureQueryBuilder) buildStoreImageQuery(imageTextDetectionDto *pictur
 
 	return &query{data: data, sql: sql}
 }
+
 func (s *pictureQueryBuilder) buildUpdateImageHandleQuery(picture *pictures.Picture) *query {
 	sql := `UPDATE pictures SET
                 original_path = $1,

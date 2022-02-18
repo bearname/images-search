@@ -3,14 +3,13 @@ package main
 import (
 	"encoding/json"
 	log "github.com/sirupsen/logrus"
-	"github.com/streadway/amqp"
 	rabbitmq "photofinish/pkg/common/infrarstructure/amqp"
 	"photofinish/pkg/domain/broker"
 	"photofinish/pkg/domain/tasks"
 	"time"
 )
 
-func handleDemon(outboxRepo broker.Repo, amqpChannel *amqp.Channel) {
+func handleDemon(outboxRepo broker.Repo, amqpChannel *rabbitmq.Service) {
 	for {
 		list, err := outboxRepo.FindNotCompletedOutboxList(10)
 		if err != nil {
@@ -21,7 +20,7 @@ func handleDemon(outboxRepo broker.Repo, amqpChannel *amqp.Channel) {
 	}
 }
 
-func publish(outboxRepo broker.Repo, list *[]broker.Outbox, amqpChannel *amqp.Channel) {
+func publish(outboxRepo broker.Repo, list *[]broker.Outbox, amqpChannel *rabbitmq.Service) {
 	var task tasks.Task
 	var t tasks.AddImageDto
 	var data []byte
@@ -42,10 +41,10 @@ func publish(outboxRepo broker.Repo, list *[]broker.Outbox, amqpChannel *amqp.Ch
 			err = outboxRepo.UpdateStatus(outbox.Id.String(), broker.OutboxNotProcessing)
 			continue
 		}
-		err = rabbitmq.PublishToQueue(amqpChannel, outbox.BrokerTopic, data)
+		err = amqpChannel.PublishToQueue(outbox.BrokerTopic, data)
 		if err != nil {
 			time.Sleep(2 * time.Second)
-			err = rabbitmq.PublishToQueue(amqpChannel, outbox.BrokerTopic, data)
+			err = amqpChannel.PublishToQueue(outbox.BrokerTopic, data)
 			if err != nil {
 				status = broker.OutboxNotProcessing
 			}

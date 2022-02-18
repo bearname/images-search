@@ -6,6 +6,45 @@ import (
 
 const TargetQueue = "QueueService"
 
+type BrokerService interface {
+	Consume(queueName string) (<-chan amqp.Delivery, error)
+	PublishToQueue(queueName string, data []byte) error
+}
+
+type Service struct {
+	channel *amqp.Channel
+}
+
+func NewAmqpService(channel *amqp.Channel) *Service {
+	s := new(Service)
+	s.channel = channel
+	return s
+}
+func (s *Service) Consume(queueName string) (<-chan amqp.Delivery, error) {
+	return s.channel.Consume(
+		queueName, // queue name
+		"",        // consumer
+		true,      // auto-ack
+		false,     // exclusive
+		false,     // no local
+		false,     // no wait
+		nil,       // arguments
+	)
+}
+
+func (s *Service) PublishToQueue(queueName string, data []byte) error {
+	message := amqp.Publishing{
+		ContentType: "text/plain",
+		Body:        data,
+	}
+
+	err := s.publish(s.channel, queueName, message)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 func Dial(amqpServerURL string, queueName string) (*amqp.Channel, error) {
 	connectRabbitMQ, err := amqp.Dial(amqpServerURL)
 	if err != nil {
@@ -24,18 +63,6 @@ func Dial(amqpServerURL string, queueName string) (*amqp.Channel, error) {
 	return channel, nil
 }
 
-func Consume(channel *amqp.Channel, queueName string) (<-chan amqp.Delivery, error) {
-	return channel.Consume(
-		queueName, // queue name
-		"",        // consumer
-		true,      // auto-ack
-		false,     // exclusive
-		false,     // no local
-		false,     // no wait
-		nil,       // arguments
-	)
-}
-
 func initialize(channel *amqp.Channel, queueName string) error {
 	_, err := channel.QueueDeclare(
 		queueName, // queue name
@@ -51,7 +78,7 @@ func initialize(channel *amqp.Channel, queueName string) error {
 	return nil
 }
 
-func Publish(channel *amqp.Channel, queueName string, message amqp.Publishing) error {
+func (s *Service) publish(channel *amqp.Channel, queueName string, message amqp.Publishing) error {
 	return channel.Publish(
 		"",        // exchange
 		queueName, // queue name
@@ -59,17 +86,4 @@ func Publish(channel *amqp.Channel, queueName string, message amqp.Publishing) e
 		false,     // immediate
 		message,   // message to publish
 	)
-}
-
-func PublishToQueue(channel *amqp.Channel, queueName string, data []byte) error {
-	message := amqp.Publishing{
-		ContentType: "text/plain",
-		Body:        data,
-	}
-
-	err := Publish(channel, queueName, message)
-	if err != nil {
-		return err
-	}
-	return err
 }

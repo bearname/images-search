@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rekognition"
@@ -80,16 +78,11 @@ func main() {
 		}
 	}(amqpChannel)
 
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(c.AwsS3Region))
-	if err != nil {
-		log.Fatal(err)
-	}
-	client := s3.NewFromConfig(cfg)
-
-	handler := initHandlers(pool, amqpChannel, conf.DropboxAccessToken, conf.StripeSecretKey, client, c.AwsS3Bucket, "addImageTopic")
+	handler := initHandlers(pool, amqpChannel, conf.DropboxAccessToken, conf.StripeSecretKey, "addImageTopic")
 	orderRepo := postgres.NewOutboxRepo(pool)
 
-	go handleDemon(orderRepo, amqpChannel)
+	amqpService := rabbitmq.NewAmqpService(amqpChannel)
+	go handleDemon(orderRepo, amqpService)
 	log.Println("Start on port '" + port + " 'at " + time.Now().String())
 	srv := httpServer.StartServer(port, handler)
 	killSignalChan := httpServer.GetKillSignalChan()
@@ -103,14 +96,15 @@ func main() {
 	}
 }
 
-func initHandlers(connPool *pgx.ConnPool, amqpChannel *amqp.Channel, dropboxAccessToken string, stripeSecretKey string, s3Client *s3.Client, s3Bucket, brokerAddImageTopic string) http.Handler {
+func initHandlers(connPool *pgx.ConnPool, amqpChannel *amqp.Channel, dropboxAccessToken string, stripeSecretKey string, brokerAddImageTopic string) http.Handler {
 	downloader := dropbox.NewSDKDownloader(dropboxAccessToken)
 
 	pictureRepo := postgres.NewPictureRepository(connPool)
 	tasksRepo := postgres.NewTasksRepo(connPool)
 	tasksService := tasks.NewService(tasksRepo)
 
-	pictureService := picture.NewPictureService(pictureRepo, amqpChannel, downloader, s3Client, s3Bucket, brokerAddImageTopic, tasksService) //, svc, uploader, compressor
+	amqpService := rabbitmq.NewAmqpService(amqpChannel)
+	pictureService := picture.NewPictureService(pictureRepo, amqpService, downloader, brokerAddImageTopic, tasksService)
 	pictureController := transport.NewPictureController(pictureService)
 
 	eventRepo := postgres.NewEventRepository(connPool)
@@ -153,8 +147,6 @@ type Config struct {
 	DbPassword         string
 	MaxConnections     int
 	AcquireTimeout     int
-	AwsS3Region        string
-	AwsS3Bucket        string
 	AmqpServerURL      string
 	DropboxAccessToken string
 	StripeSecretKey    string
@@ -191,8 +183,6 @@ func ParseConfig() (*Config, error) {
 	amqpServerUrl, err := parseEnvString("AMQP_SERVER_URL", err)
 	dropboxAccessToken, err := parseEnvString("DROPBOX_ACCESS_TOKEN", err)
 	stripeSecretKey, err := parseEnvString("STRIPE_SECRET_KEY", err)
-	awsS3Region, err := parseEnvString("AWS_S3_REGION", err)
-	awsS3Bucket, err := parseEnvString("AWS_S3_BUCKET", err)
 
 	if err != nil {
 		log.Info("error " + err.Error())
@@ -207,8 +197,6 @@ func ParseConfig() (*Config, error) {
 		dbPassword,
 		maxConnections,
 		acquireTimeout,
-		awsS3Region,
-		awsS3Bucket,
 		amqpServerUrl,
 		dropboxAccessToken,
 		stripeSecretKey,

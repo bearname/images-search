@@ -9,7 +9,7 @@ type UploadOutput struct {
 	// will not be set.
 	VersionID *string
 
-	// The ID for a multipart upload to S3. In the case of an error the error
+	// The ID for a multipart upload to S3. In the case of an domainerror the domainerror
 	// can be cast to the MultiUploadFailure interface to extract the upload ID.
 	UploadID string
 }

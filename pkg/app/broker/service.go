@@ -2,7 +2,7 @@ package broker
 
 import (
 	"photofinish/pkg/domain/broker"
-	"photofinish/pkg/domain/errors"
+	"photofinish/pkg/domain/domainerror"
 )
 
 type ServiceImpl struct {
@@ -27,7 +27,7 @@ func (s *ServiceImpl) FindOutboxList() (*[]broker.Outbox, error) {
 func (s *ServiceImpl) Delete(outboxId string) error {
 	err := s.repo.CheckExist(outboxId)
 	if err != nil {
-		return errors.ErrNotExists
+		return domainerror.ErrNotExists
 	}
 	err = s.repo.UpdateStatus(outboxId, broker.OutboxDone)
 	return err

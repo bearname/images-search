@@ -185,7 +185,8 @@ func handleAddNewImageEvent(wg *sync.WaitGroup, amqpServerURL string, topicImage
 		if err != nil {
 			log.Fatal(err)
 		}
-		pictureProcessor := picture.NewPictureProcessor(downloader, pictureRepo, amqpChan, topicImageHandle, outboxRepo)
+		amqpService := rabbitmq.NewAmqpService(amqpChan)
+		pictureProcessor := picture.NewPictureProcessor(downloader, pictureRepo, amqpService, topicImageHandle, outboxRepo)
 
 		go handleMessages(wg, messages, pictureProcessor)
 	}
@@ -217,7 +218,8 @@ func consume(amqpServerURL, queueName string, fn func(<-chan amqp.Delivery)) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	messages, err := rabbitmq.Consume(amqpChan, queueName)
+	amqpService := rabbitmq.NewAmqpService(amqpChan)
+	messages, err := amqpService.Consume(queueName)
 	if err != nil {
 		log.Fatal(err)
 	}

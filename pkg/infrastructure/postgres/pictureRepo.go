@@ -4,6 +4,7 @@ import (
 	"github.com/jackc/pgx"
 	log "github.com/sirupsen/logrus"
 	"photofinish/pkg/common/infrarstructure/db"
+	"photofinish/pkg/domain/domainerror"
 	"photofinish/pkg/domain/pictures"
 	"strconv"
 	"strings"
@@ -154,8 +155,11 @@ func (r *PictureRepositoryImpl) UpdateImageHandle(picture *pictures.Picture) err
 	return nil
 }
 
-func (r *PictureRepositoryImpl) Store(imageTextDetectionDto *pictures.TextDetectionOnImageDto) error {
-	queryPg := r.queryBuilder.buildStoreImageQuery(imageTextDetectionDto)
+func (r *PictureRepositoryImpl) Store(image *pictures.TextDetectionOnImageDto) error {
+	if image != nil {
+		return domainerror.ErrNilObject
+	}
+	queryPg := r.queryBuilder.buildStoreImageQuery(image)
 
 	err := db.WithTransactionSQL(r.connPool, queryPg.sql, queryPg.data)
 

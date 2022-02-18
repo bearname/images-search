@@ -22,12 +22,10 @@ require (
 	github.com/lib/pq v1.10.2 // indirect
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/pkg/errors v0.9.1
-	github.com/quasilyte/go-consistent v0.0.0-20200404105227-766526bf1e96 // indirect
-	github.com/quasilyte/go-unexport v0.0.0-20190808161220-2c8931619b09 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/streadway/amqp v1.0.0
-	github.com/stretchr/testify v1.4.0 // indirect
+	github.com/stretchr/testify v1.4.0
 	github.com/stripe/stripe-go v70.15.0+incompatible
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
 )
