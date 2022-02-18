@@ -16,8 +16,8 @@ on:
 env:
   BACK_IMAGE: photoservice
   IMG_PROCESSOR: image-processor
-  LIBERATOR_BLOCKED_WORKER: liberatorBlockedWorker
-  RAW_IMAGE_HANDLER: rawImageHandler
+  LIBERATOR_BLOCKED_WORKER: liberator-blocked-worker
+  RAW_IMAGE_HANDLER: raw-image-handler
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
