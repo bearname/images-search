@@ -5,5 +5,6 @@ git clone https://github.com/col3name/images-search-frontend frontend
 cd frontend
 npm install
 npm run build
+cp -r ./frontend/dist ../dist
 cd ..
-cp -r ./frontend/dist ./dist
+ls ./
