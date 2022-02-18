@@ -51,13 +51,14 @@ jobs:
 #        run: npm run build
 #      - name: script allow
 #        run: cd ..
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: script allow
         run: chmod +x ./scripts/frontend.sh
       - name: script allow
         run: ./scripts/frontend.sh
-
-      - name: Checkout code
-        uses: actions/checkout@v2
 
       - name: Fetch required Go modules
         run: go mod download
