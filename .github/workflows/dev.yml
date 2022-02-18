@@ -52,6 +52,8 @@ jobs:
 #      - name: script allow
 #        run: cd ..
       - name: script allow
+        run: chmod +x ./scripts/frontend.sh
+      - name: script allow
         run: ./scripts/frontend.sh
 
       - name: Checkout code
