@@ -77,8 +77,15 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - name: debug
         run: ls && pwd
+
       - name: build containers
-        run: docker build -f Dockerfile -t mikhailmi/photoservice .
+        run: docker build -f Dockerfile -t ${{ secrets.DOCKER_HUB_USERNAME }}/photoservice . && docker push ${{ secrets.DOCKER_HUB_USERNAME }}/photoservice
+      - name: build containers imageProcessor
+        run: docker build -f Dockerfile-imageProcessor -t ${{ secrets.DOCKER_HUB_USERNAME }}/imageProcessor . && docker push ${{ secrets.DOCKER_HUB_USERNAME }}/imageProcessor
+      - name: build containers liberatorBlockedWorker
+        run: docker build -f Dockerfile-liberatorBlockedWorker -t ${{ secrets.DOCKER_HUB_USERNAME }}/liberatorBlockedWorker . && docker push ${{ secrets.DOCKER_HUB_USERNAME }}/liberatorBlockedWorker
+      - name: build containers rawImageHandler
+        run: docker build -f Dockerfile-rawImageHandler -t ${{ secrets.DOCKER_HUB_USERNAME }}/rawImageHandler . && docker push ${{ secrets.DOCKER_HUB_USERNAME }}/rawImageHandler
 
 #      - name: Build and push Docker image
 #        run: docker push
