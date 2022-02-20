@@ -8,11 +8,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rekognition"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/jackc/pgx"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
+	"net/http"
 	"os"
 	"photofinish/pkg/app/aws/recognition"
+	"photofinish/pkg/app/telegram"
+
 	//"photofinish/pkg/app/aws/recognition/rekognition"
 	s32 "photofinish/pkg/app/aws/s3"
 	"photofinish/pkg/app/dropbox"
@@ -70,6 +75,18 @@ func main() {
 		log.Fatal("DROPBOX_ACCESS_TOKEN not set into env variable ")
 	}
 
+	tgBotToken := os.Getenv("TG_BOT_TOKEN")
+	if len(tgBotToken) == 0 {
+		log.Fatal(errors.New("Failed get TG_BOT_TOKEN"))
+	}
+	tgSupportChatIdStr := os.Getenv("TG_SUPPORT_CHAT_ID")
+	if len(tgBotToken) == 0 {
+		log.Fatal(errors.New("Failed get TG_BOT_TOKEN"))
+	}
+	tgSupportChatId, err := strconv.Atoi(tgSupportChatIdStr)
+	if err != nil {
+		log.Fatal(errors.New("invalid DATABASE_MAX_CONNECTION"))
+	}
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(awsS3Region))
 	if err != nil {
 		log.Fatal(err)
@@ -96,18 +113,29 @@ func main() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
+	bot, err := tgbotapi.NewBotAPI(tgBotToken)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	tgNotifier := telegram.NewNotifier(bot, tgSupportChatId)
+
 	pictureCoordinator := picture.NewCoordinatorServiceImpl(2,
 		pictureRepo,
 		downloader,
 		awsS3Uploader,
 		textDetector,
 		compressor,
+		tgNotifier,
 		0)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	ch := make(chan pictures.Picture)
-
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		http.ListenAndServe(":2112", nil)
+	}()
 	wg.Add(1)
 	go func() {
 		defer wg.Done()

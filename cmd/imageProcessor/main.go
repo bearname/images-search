@@ -8,11 +8,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/streadway/amqp"
 	"net/http"
 	_ "net/http/pprof"
 	"os/signal"
+	"photofinish/pkg/app/telegram"
 	"photofinish/pkg/common/util"
+	"photofinish/pkg/domain"
 	"photofinish/pkg/domain/broker"
 	"photofinish/pkg/domain/tasks"
 	"runtime"
@@ -91,6 +95,19 @@ func main() {
 		log.Fatal(errors.New("invalid DATABASE_MAX_CONNECTION"))
 	}
 
+	tgBotToken := os.Getenv("TG_BOT_TOKEN")
+	if len(tgBotToken) == 0 {
+		log.Fatal(errors.New("Failed get TG_BOT_TOKEN"))
+	}
+	tgSupportChatIdStr := os.Getenv("TG_SUPPORT_CHAT_ID")
+	if len(tgBotToken) == 0 {
+		log.Fatal(errors.New("Failed get TG_BOT_TOKEN"))
+	}
+	tgSupportChatId, err := strconv.Atoi(tgSupportChatIdStr)
+	if err != nil {
+		log.Fatal(errors.New("invalid DATABASE_MAX_CONNECTION"))
+	}
+
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(awsS3Region))
 	if err != nil {
 		log.Fatal(err)
@@ -98,7 +115,6 @@ func main() {
 	client := s3.NewFromConfig(cfg)
 	uploader := manager.NewUploader(client)
 	connector, err := db.GetDBConfig(dbDSN, maxConnections, acquireTimeout)
-
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -116,12 +132,21 @@ func main() {
 	compressor := picture.NewImageCompressor()
 	textDetector := recognition.NewAmazonTextRecognition(svc)
 	err = pictureRepo.IsExists("1")
+	bot, err := tgbotapi.NewBotAPI(tgBotToken)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	tgNotifier := telegram.NewNotifier(bot, tgSupportChatId)
+	err = tgNotifier.Notify(domain.Message{
+		Message: "failed processing image: ",
+	})
 	pictureCoordinator := picture.NewCoordinatorServiceImpl(2,
 		pictureRepo,
 		downloader,
 		awsS3Uploader,
 		textDetector,
 		compressor,
+		tgNotifier,
 		0)
 
 	wg := sync.WaitGroup{}
@@ -141,6 +166,10 @@ func main() {
 	killSignalChan := make(chan os.Signal, 1)
 	signal.Notify(killSignalChan, os.Interrupt, syscall.SIGTERM)
 
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		http.ListenAndServe(":2112", nil)
+	}()
 	wg.Wait()
 
 	killSignal := <-killSignalChan

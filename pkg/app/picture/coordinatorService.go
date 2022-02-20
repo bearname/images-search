@@ -23,8 +23,8 @@ type CoordinatorServiceImpl struct {
 	uploader                domain.Uploader
 	textDetector            recognition.AmazonTextRecognition
 	compressor              domain.ImageCompressor
-
-	minConfidence int
+	notifier                domain.NotifierService
+	minConfidence           int
 }
 
 func NewCoordinatorServiceImpl(maxAttemptsBeforeNotify int, pictureRepo *postgres.PictureRepositoryImpl,
@@ -32,6 +32,7 @@ func NewCoordinatorServiceImpl(maxAttemptsBeforeNotify int, pictureRepo *postgre
 	uploader domain.Uploader,
 	textDetector *recognition.AmazonTextRecognition,
 	compressor domain.ImageCompressor,
+	notifier domain.NotifierService,
 	minConfidence int) *CoordinatorServiceImpl {
 
 	c := new(CoordinatorServiceImpl)
@@ -42,6 +43,7 @@ func NewCoordinatorServiceImpl(maxAttemptsBeforeNotify int, pictureRepo *postgre
 	c.uploader = uploader
 	c.textDetector = *textDetector
 	c.compressor = compressor
+	c.notifier = notifier
 	c.minConfidence = minConfidence
 
 	return c
@@ -182,15 +184,12 @@ func (c *CoordinatorServiceImpl) handleError(image *pictures.Picture, err error)
 	now := time.Now()
 	image.Attempts++
 	if image.Attempts > c.maxAttemptsBeforeNotify {
-
-		log.Println("Notify developer")
-		//TODO
-		// send to developer tg
-		//err := c.notifier.Notify(pictures)
-		//if err != nil {
-		//    log.Println("failed notify developer")
-		//    log.Println(err, pictures, "err")
-		//}
+		err = c.notifier.Notify(domain.Message{
+			Message: "failed processing image: " + image.Id.String(),
+		})
+		if err != nil {
+			log.Println("failed notify developer", err)
+		}
 	}
 
 	image.ProcessingStatus = pictures.Failed

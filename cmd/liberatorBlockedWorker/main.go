@@ -3,7 +3,9 @@ package main
 import (
 	"errors"
 	"github.com/jackc/pgx"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
+	"net/http"
 	"os"
 	"photofinish/pkg/common/infrarstructure/db"
 	"photofinish/pkg/common/util"
@@ -50,6 +52,10 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		http.ListenAndServe(":2112", nil)
+	}()
 	for {
 		log.Println("getSqlReleaseBlockPicture()")
 		err = db.WithTransaction(pool, func(tx *pgx.Tx) error {

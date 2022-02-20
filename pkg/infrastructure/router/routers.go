@@ -3,6 +3,7 @@ package router
 import (
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"photofinish/pkg/infrastructure/transport"
@@ -24,7 +25,7 @@ func Router(controllers *Controllers) http.Handler {
 
 	router.HandleFunc("/health", healthCheckHandler).Methods(http.MethodGet)
 	router.HandleFunc("/ready", readyCheckHandler).Methods(http.MethodGet)
-
+	router.Handle("/metrics", promhttp.Handler())
 	router.HandleFunc("/webhook", orderController.OnEventStripe()).Methods(postReq...)
 
 	apiV1Route := router.PathPrefix("/api/v1").Subrouter()

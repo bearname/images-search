@@ -6,7 +6,7 @@ services:
       - 8000:8000
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: builder.Dockerfile
     environment:
       SERVE_REST_ADDRESS: photobackend:8000
       DATABASE_ADDRESS: url-short-postgres
@@ -16,7 +16,7 @@ services:
       DATABASE_MAX_CONNECTION: 10
       DATABASE_ACQUIRE_TIMEOUT: 1000
       AMQP_SERVER_URL: amqp://guest:guest@message-broker:5672/
-      DROPBOX_ACCESS_TOKEN: token
+      DROPBOX_ACCESS_TOKEN: dropboxToken
 
     restart: always
     networks:
@@ -32,56 +32,61 @@ services:
       context: .
       dockerfile: Dockerfile-imageProcessor
     environment:
-      DROPBOX_ACCESS_TOKEN: token
+      DROPBOX_ACCESS_TOKEN: dropboxToken
       DATABASE_MAX_CONNECTION: 10
       DATABASE_DSN: postgres://url-short:1234@url-short-postgres:5432/url-short?sslmode=disable
       DATABASE_ACQUIRE_TIMEOUT: 1000
-      AWS_S3_REGION: eu-central-1
-      AWS_S3_BUCKET: img-rekongnition-test2
-      AWS_SECRET_ACCESS_KEY: secret
+      AWS_S3_REGION: awsS3Region
+      AWS_S3_BUCKET: awsS3Bucket
+      AWS_SECRET_ACCESS_KEY: awsSecretAccessKey
       AMQP_SERVER_URL: amqp://guest:guest@message-broker:5672/
+      GODEBUG: madvdontneed=1
+      TG_BOT_TOKEN: tgBotToken
+      TG_SUPPORT_CHAT_ID: tgChatId
     restart: always
     networks:
       - dev-network
     depends_on:
       - message-broker
       - photo-postgres
-  #
-  #  raw-image-handler:
-  ##    scale: 1
-  #    #    container_name: consumer
-  #    build:
-  #      context: .
-  #      dockerfile: Dockerfile-rawImageHandler
-  #    environment:
-  #      AWS_S3_REGION: eu-central-1
-  #      AWS_S3_BUCKET: bucket
-  #      AWS_SECRET_ACCESS_KEY: secret
-  #      DATABASE_DSN: postgres://url-short:1234@url-short-postgres:5432/url-short?sslmode=disable
-  #      DATABASE_MAX_CONNECTION: 10
-  #      DATABASE_ACQUIRE_TIMEOUT: 1000
-  #      DROPBOX_ACCESS_TOKEN: token
-  #    restart: always
-  #    networks:
-  #      - dev-network
-  #    depends_on:
-  #      - photo-postgres
-  #
-  #  liberator-blocked-worker:
-  ##    scale: 1
-  #    #    container_name: consumer
-  #    build:
-  #      context: .
-  #      dockerfile: Dockerfile-liberatorBlockedWorker
-  #    environment:
-  #      DATABASE_MAX_CONNECTION: 1
-  #      DATABASE_DSN: postgres://url-short:1234@url-short-postgres:5432/url-short?sslmode=disable
-  #      DATABASE_ACQUIRE_TIMEOUT: 2000
-  #    restart: always
-  #    networks:
-  #      - dev-network
-  #    depends_on:
-  #      - photo-postgres
+
+  raw-image-handler:
+    #    scale: 1
+    #    container_name: consumer
+    build:
+      context: .
+      dockerfile: Dockerfile-rawImageHandler
+    environment:
+      AWS_S3_REGION: awsS3Region
+      AWS_S3_BUCKET: awsS3Bucket
+      AWS_SECRET_ACCESS_KEY: awsSecret
+      DATABASE_DSN: postgres://url-short:1234@url-short-postgres:5432/url-short?sslmode=disable
+      DATABASE_MAX_CONNECTION: 10
+      DATABASE_ACQUIRE_TIMEOUT: 1000
+      DROPBOX_ACCESS_TOKEN: dropboxToken
+      TG_BOT_TOKEN: tgBotToken
+      TG_SUPPORT_CHAT_ID: tgChatId
+    restart: always
+    networks:
+      - dev-network
+    depends_on:
+      - photo-postgres
+
+  liberator-blocked-worker:
+    #    scale: 1
+    #    container_name: consumer
+    build:
+      context: .
+      dockerfile: Dockerfile-liberatorBlockedWorker
+    environment:
+      DATABASE_MAX_CONNECTION: 1
+      DATABASE_DSN: postgres://url-short:1234@url-short-postgres:5432/url-short?sslmode=disable
+      DATABASE_ACQUIRE_TIMEOUT: 2000
+    restart: always
+    networks:
+      - dev-network
+    depends_on:
+      - photo-postgres
 
   message-broker:
     image: rabbitmq:3-management-alpine
@@ -110,12 +115,16 @@ services:
       POSTGRES_DB: url-short
     networks:
       - dev-network
+  grafana:
+    image: grafana/grafana-enterprise:8.2.0
+    ports:
+      - 3000:3000
+    user: '104'
 
 volumes:
   rabbit-volume:
   url-short-postgres-data:
 
 networks:
-  # Create a new Docker network.
   dev-network:
     driver: bridge

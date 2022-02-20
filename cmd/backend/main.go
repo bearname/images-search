@@ -80,11 +80,11 @@ func main() {
 
 	handler := initHandlers(pool, amqpChannel, conf.DropboxAccessToken, conf.StripeSecretKey, "addImageTopic")
 	orderRepo := postgres.NewOutboxRepo(pool)
-
 	amqpService := rabbitmq.NewAmqpService(amqpChannel)
 	go demon2.HandleDemon(orderRepo, amqpService)
 	log.Println("Start on port '" + port + " 'at " + time.Now().String())
 	srv := httpServer.StartServer(port, handler)
+
 	killSignalChan := httpServer.GetKillSignalChan()
 	httpServer.WaitForKillSignal(killSignalChan)
 	err = srv.Shutdown(context.TODO())
