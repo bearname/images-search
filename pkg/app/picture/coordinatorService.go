@@ -3,9 +3,9 @@ package picture
 import (
 	"bytes"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/col3name/images-search/pkg/app/aws/recognition"
 	"github.com/col3name/images-search/pkg/domain"
 	"github.com/col3name/images-search/pkg/domain/pictures"
+	"github.com/col3name/images-search/pkg/infrastructure/aws/recognition"
 	"github.com/col3name/images-search/pkg/infrastructure/postgres"
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox/files"
 	log "github.com/sirupsen/logrus"

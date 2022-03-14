@@ -7,9 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rekognition"
 	"github.com/col3name/images-search/pkg/app/auth"
-	"github.com/col3name/images-search/pkg/app/dropbox"
 	"github.com/col3name/images-search/pkg/app/event"
-	"github.com/col3name/images-search/pkg/app/paySystem"
 	"github.com/col3name/images-search/pkg/app/picture"
 	"github.com/col3name/images-search/pkg/app/tasks"
 	"github.com/col3name/images-search/pkg/app/user"
@@ -18,6 +16,8 @@ import (
 	"github.com/col3name/images-search/pkg/common/infrarstructure/db"
 	"github.com/col3name/images-search/pkg/common/infrarstructure/server"
 	"github.com/col3name/images-search/pkg/common/util"
+	"github.com/col3name/images-search/pkg/infrastructure/dropbox"
+	paySystem2 "github.com/col3name/images-search/pkg/infrastructure/paySystem"
 	"github.com/col3name/images-search/pkg/infrastructure/postgres"
 	"github.com/col3name/images-search/pkg/infrastructure/router"
 	"github.com/col3name/images-search/pkg/infrastructure/transport"
@@ -119,9 +119,9 @@ func initHandlers(connPool *pgx.ConnPool, amqpChannel *amqp.Channel, dropboxAcce
 	tasksController := transport.NewTasksController(tasksService)
 
 	orderRepo := postgres.NewOrderRepository(connPool)
-	stripeService := paySystem.NewStripeService(stripeSecretKey)
-	payService := paySystem.NewOrderService(orderRepo)
-	yookassaService, err := paySystem.NewYookassaService(54401, "test_Fh8hUAVVBGUGbjmlzba6TB0iyUbos_lueTHE-axOwM0")
+	stripeService := paySystem2.NewStripeService(stripeSecretKey)
+	payService := paySystem2.NewOrderService(orderRepo)
+	yookassaService, err := paySystem2.NewYookassaService(54401, "test_Fh8hUAVVBGUGbjmlzba6TB0iyUbos_lueTHE-axOwM0")
 	if err != nil {
 		log.Fatal(err)
 		return nil

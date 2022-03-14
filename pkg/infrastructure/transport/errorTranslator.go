@@ -2,9 +2,9 @@ package transport
 
 import (
 	"errors"
-	"github.com/col3name/images-search/pkg/app/dropbox"
 	"github.com/col3name/images-search/pkg/domain/auth"
 	"github.com/col3name/images-search/pkg/domain/pictures"
+	"github.com/col3name/images-search/pkg/infrastructure/dropbox"
 	"net/http"
 )
 

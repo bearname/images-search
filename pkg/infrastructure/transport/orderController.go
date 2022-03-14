@@ -3,10 +3,10 @@ package transport
 import (
 	"encoding/json"
 	"errors"
-	"github.com/col3name/images-search/pkg/app/paySystem"
 	"github.com/col3name/images-search/pkg/common/util"
 	"github.com/col3name/images-search/pkg/domain/order"
 	"github.com/col3name/images-search/pkg/domain/user"
+	paySystem2 "github.com/col3name/images-search/pkg/infrastructure/paySystem"
 	"github.com/col3name/images-search/pkg/infrastructure/yookassa"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -20,14 +20,14 @@ type OrderController struct {
 	BaseController
 	orderService    order.Service
 	userService     user.Service
-	stripeService   *paySystem.StripeService
-	yookassaService *paySystem.YookassaService
+	stripeService   *paySystem2.StripeService
+	yookassaService *paySystem2.YookassaService
 }
 
 func NewOrderController(userService user.Service,
 	service order.Service,
-	paySystem *paySystem.StripeService,
-	yookassaService *paySystem.YookassaService) *OrderController {
+	paySystem *paySystem2.StripeService,
+	yookassaService *paySystem2.YookassaService) *OrderController {
 	c := new(OrderController)
 	c.userService = userService
 	c.orderService = service
