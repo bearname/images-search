@@ -3,9 +3,9 @@ package yookassa
 import (
 	"encoding/base64"
 	"encoding/json"
+	"github.com/col3name/images-search/pkg/common/util/uuid"
 	"io/ioutil"
 	"net/http"
-	"photofinish/pkg/common/util/uuid"
 	"strconv"
 	"strings"
 )

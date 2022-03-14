@@ -1,8 +1,8 @@
 package broker
 
 import (
-	"photofinish/pkg/domain/broker"
-	"photofinish/pkg/domain/domainerror"
+	"github.com/col3name/images-search/pkg/domain/broker"
+	"github.com/col3name/images-search/pkg/domain/domainerror"
 )
 
 type ServiceImpl struct {

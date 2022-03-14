@@ -2,12 +2,12 @@ package transport
 
 import (
 	"encoding/json"
+	"github.com/col3name/images-search/pkg/domain/dto"
+	"github.com/col3name/images-search/pkg/domain/event"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
-	"photofinish/pkg/domain/dto"
-	"photofinish/pkg/domain/event"
 	"strconv"
 )
 

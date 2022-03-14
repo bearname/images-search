@@ -1,7 +1,7 @@
 package tasks
 
 import (
-	"photofinish/pkg/domain/dto"
+	"github.com/col3name/images-search/pkg/domain/dto"
 )
 
 type Repo interface {

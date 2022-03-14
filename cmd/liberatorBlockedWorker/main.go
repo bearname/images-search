@@ -2,14 +2,14 @@ package main
 
 import (
 	"errors"
+	"github.com/col3name/images-search/pkg/common/infrarstructure/db"
+	"github.com/col3name/images-search/pkg/common/util"
+	"github.com/col3name/images-search/pkg/domain/pictures"
 	"github.com/jackc/pgx"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
-	"photofinish/pkg/common/infrarstructure/db"
-	"photofinish/pkg/common/util"
-	"photofinish/pkg/domain/pictures"
 	"strconv"
 	"time"
 )

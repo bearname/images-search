@@ -2,9 +2,9 @@ package postgres
 
 import (
 	"errors"
+	"github.com/col3name/images-search/pkg/domain/dto"
+	"github.com/col3name/images-search/pkg/domain/event"
 	"github.com/jackc/pgx"
-	"photofinish/pkg/domain/dto"
-	"photofinish/pkg/domain/event"
 )
 
 type EventRepositoryImpl struct {

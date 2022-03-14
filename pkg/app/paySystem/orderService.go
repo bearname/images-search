@@ -1,9 +1,9 @@
 package paySystem
 
 import (
+	"github.com/col3name/images-search/pkg/common/util/uuid"
+	"github.com/col3name/images-search/pkg/domain/order"
 	log "github.com/sirupsen/logrus"
-	"photofinish/pkg/common/util/uuid"
-	"photofinish/pkg/domain/order"
 )
 
 type OrderService struct {

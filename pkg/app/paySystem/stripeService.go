@@ -3,10 +3,10 @@ package paySystem
 import (
 	"encoding/json"
 	"errors"
+	"github.com/col3name/images-search/pkg/domain/order"
 	log "github.com/sirupsen/logrus"
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/charge"
-	"photofinish/pkg/domain/order"
 )
 
 const ChargeSucceeded = "charge.succeeded"

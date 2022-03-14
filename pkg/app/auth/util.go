@@ -2,9 +2,9 @@ package auth
 
 import (
 	"fmt"
+	"github.com/col3name/images-search/pkg/domain/user"
 	"github.com/dgrijalva/jwt-go"
 	"os"
-	"photofinish/pkg/domain/user"
 	"strings"
 	"time"
 )

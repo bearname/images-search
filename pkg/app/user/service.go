@@ -1,9 +1,9 @@
 package user
 
 import (
-	"photofinish/pkg/common/util"
-	"photofinish/pkg/domain/auth"
-	"photofinish/pkg/domain/user"
+	"github.com/col3name/images-search/pkg/common/util"
+	"github.com/col3name/images-search/pkg/domain/auth"
+	"github.com/col3name/images-search/pkg/domain/user"
 )
 
 type Service struct {

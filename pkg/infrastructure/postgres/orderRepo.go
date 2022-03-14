@@ -1,8 +1,8 @@
 package postgres
 
 import (
+	"github.com/col3name/images-search/pkg/domain/order"
 	"github.com/jackc/pgx"
-	"photofinish/pkg/domain/order"
 	"strconv"
 )
 

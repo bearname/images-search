@@ -2,10 +2,10 @@ package transport
 
 import (
 	"encoding/json"
+	"github.com/col3name/images-search/pkg/domain/auth"
 	"github.com/gorilla/context"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"photofinish/pkg/domain/auth"
 )
 
 type AuthController struct {

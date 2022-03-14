@@ -2,11 +2,11 @@ package router
 
 import (
 	"fmt"
+	"github.com/col3name/images-search/pkg/infrastructure/transport"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"photofinish/pkg/infrastructure/transport"
 )
 
 type Controllers struct {

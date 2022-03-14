@@ -2,12 +2,12 @@ package picture
 
 import (
 	"encoding/json"
-	rabbitmq "photofinish/pkg/common/infrarstructure/amqp"
-	"photofinish/pkg/common/util/uuid"
-	"photofinish/pkg/domain"
-	"photofinish/pkg/domain/domainerror"
-	"photofinish/pkg/domain/pictures"
-	"photofinish/pkg/domain/tasks"
+	rabbitmq "github.com/col3name/images-search/pkg/common/infrarstructure/amqp"
+	"github.com/col3name/images-search/pkg/common/util/uuid"
+	"github.com/col3name/images-search/pkg/domain"
+	"github.com/col3name/images-search/pkg/domain/domainerror"
+	"github.com/col3name/images-search/pkg/domain/pictures"
+	"github.com/col3name/images-search/pkg/domain/tasks"
 )
 
 type ServiceImpl struct {

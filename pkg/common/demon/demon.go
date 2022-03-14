@@ -2,10 +2,10 @@ package demon
 
 import (
 	"encoding/json"
+	rabbitmq "github.com/col3name/images-search/pkg/common/infrarstructure/amqp"
+	"github.com/col3name/images-search/pkg/domain/broker"
+	"github.com/col3name/images-search/pkg/domain/tasks"
 	log "github.com/sirupsen/logrus"
-	rabbitmq "photofinish/pkg/common/infrarstructure/amqp"
-	"photofinish/pkg/domain/broker"
-	"photofinish/pkg/domain/tasks"
 	"time"
 )
 

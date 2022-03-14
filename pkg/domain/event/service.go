@@ -1,7 +1,7 @@
 package event
 
 import (
-	"photofinish/pkg/domain/dto"
+	"github.com/col3name/images-search/pkg/domain/dto"
 )
 
 type Service interface {

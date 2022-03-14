@@ -1,8 +1,8 @@
 package telegram
 
 import (
+	"github.com/col3name/images-search/pkg/domain"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"photofinish/pkg/domain"
 )
 
 type Notifier struct {

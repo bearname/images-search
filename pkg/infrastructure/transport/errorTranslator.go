@@ -2,10 +2,10 @@ package transport
 
 import (
 	"errors"
+	"github.com/col3name/images-search/pkg/app/dropbox"
+	"github.com/col3name/images-search/pkg/domain/auth"
+	"github.com/col3name/images-search/pkg/domain/pictures"
 	"net/http"
-	"photofinish/pkg/app/dropbox"
-	"photofinish/pkg/domain/auth"
-	"photofinish/pkg/domain/pictures"
 )
 
 var ErrUnexpected = errors.New("unexpected error")

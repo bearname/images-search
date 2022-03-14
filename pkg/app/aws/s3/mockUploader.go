@@ -2,8 +2,8 @@ package s3
 
 import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/col3name/images-search/pkg/domain"
 	"io"
-	"photofinish/pkg/domain"
 )
 
 type MockUploader struct {

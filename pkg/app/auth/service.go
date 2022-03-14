@@ -1,11 +1,11 @@
 package auth
 
 import (
+	"github.com/col3name/images-search/pkg/domain/auth"
+	"github.com/col3name/images-search/pkg/domain/user"
 	"github.com/dgrijalva/jwt-go"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
-	"photofinish/pkg/domain/auth"
-	"photofinish/pkg/domain/user"
 	"time"
 )
 

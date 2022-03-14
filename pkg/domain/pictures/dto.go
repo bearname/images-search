@@ -1,8 +1,8 @@
 package pictures
 
 import (
-	"photofinish/pkg/common/util/uuid"
-	"photofinish/pkg/domain/dto"
+	"github.com/col3name/images-search/pkg/common/util/uuid"
+	"github.com/col3name/images-search/pkg/domain/dto"
 )
 
 type TextDetectionOnImageDto struct {

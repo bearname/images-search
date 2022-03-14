@@ -1,11 +1,11 @@
 package transport
 
 import (
+	"github.com/col3name/images-search/pkg/domain/dto"
+	"github.com/col3name/images-search/pkg/domain/pictures"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"photofinish/pkg/domain/dto"
-	"photofinish/pkg/domain/pictures"
 	"strconv"
 )
 

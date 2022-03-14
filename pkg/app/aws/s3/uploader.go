@@ -6,9 +6,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/col3name/images-search/pkg/common/util/uuid"
+	"github.com/col3name/images-search/pkg/domain"
 	"io"
-	"photofinish/pkg/common/util/uuid"
-	"photofinish/pkg/domain"
 	"strings"
 )
 

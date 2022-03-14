@@ -1,11 +1,11 @@
 package postgres
 
 import (
+	"github.com/col3name/images-search/pkg/common/infrarstructure/db"
+	"github.com/col3name/images-search/pkg/domain/domainerror"
+	"github.com/col3name/images-search/pkg/domain/pictures"
 	"github.com/jackc/pgx"
 	log "github.com/sirupsen/logrus"
-	"photofinish/pkg/common/infrarstructure/db"
-	"photofinish/pkg/domain/domainerror"
-	"photofinish/pkg/domain/pictures"
 	"strconv"
 	"strings"
 )

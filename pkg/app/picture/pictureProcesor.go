@@ -2,11 +2,11 @@ package picture
 
 import (
 	"encoding/json"
-	"photofinish/pkg/app/dropbox"
-	rabbitmq "photofinish/pkg/common/infrarstructure/amqp"
-	"photofinish/pkg/domain/broker"
-	"photofinish/pkg/domain/pictures"
-	"photofinish/pkg/domain/tasks"
+	"github.com/col3name/images-search/pkg/app/dropbox"
+	rabbitmq "github.com/col3name/images-search/pkg/common/infrarstructure/amqp"
+	"github.com/col3name/images-search/pkg/domain/broker"
+	"github.com/col3name/images-search/pkg/domain/pictures"
+	"github.com/col3name/images-search/pkg/domain/tasks"
 )
 
 type Processor interface {

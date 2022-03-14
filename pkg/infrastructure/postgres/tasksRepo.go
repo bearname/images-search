@@ -1,11 +1,11 @@
 package postgres
 
 import (
+	"github.com/col3name/images-search/pkg/common/infrarstructure/db"
+	"github.com/col3name/images-search/pkg/common/util/uuid"
+	"github.com/col3name/images-search/pkg/domain/dto"
+	"github.com/col3name/images-search/pkg/domain/tasks"
 	"github.com/jackc/pgx"
-	"photofinish/pkg/common/infrarstructure/db"
-	"photofinish/pkg/common/util/uuid"
-	"photofinish/pkg/domain/dto"
-	"photofinish/pkg/domain/tasks"
 )
 
 type TasksRepoImpl struct {

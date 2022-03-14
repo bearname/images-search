@@ -2,7 +2,7 @@ package domain
 
 import (
 	"bytes"
-	"photofinish/pkg/domain/pictures"
+	"github.com/col3name/images-search/pkg/domain/pictures"
 )
 
 type ImageCompressor interface {

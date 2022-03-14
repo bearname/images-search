@@ -2,10 +2,10 @@ package recognition
 
 import (
 	"github.com/aws/aws-sdk-go/service/rekognition"
-	//"photofinish/pkg/app/aws/recognition/rekognition"
-	"photofinish/pkg/common/util"
-	"photofinish/pkg/domain"
-	"photofinish/pkg/domain/pictures"
+	//"github.com/col3name/images-search/pkg/app/aws/recognition/rekognition"
+	"github.com/col3name/images-search/pkg/common/util"
+	"github.com/col3name/images-search/pkg/domain"
+	"github.com/col3name/images-search/pkg/domain/pictures"
 )
 
 type AmazonTextRecognition struct {

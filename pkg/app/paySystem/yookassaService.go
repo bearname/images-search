@@ -2,10 +2,10 @@ package paySystem
 
 import (
 	"errors"
+	"github.com/col3name/images-search/pkg/domain/order"
+	"github.com/col3name/images-search/pkg/infrastructure/yookassa"
 	log "github.com/sirupsen/logrus"
 	"net"
-	"photofinish/pkg/domain/order"
-	"photofinish/pkg/infrastructure/yookassa"
 	"strings"
 )
 

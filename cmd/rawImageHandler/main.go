@@ -8,6 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rekognition"
+	"github.com/col3name/images-search/pkg/app/aws/recognition"
+	"github.com/col3name/images-search/pkg/app/telegram"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/jackc/pgx"
 	"github.com/pkg/errors"
@@ -15,17 +17,14 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
-	"photofinish/pkg/app/aws/recognition"
-	"photofinish/pkg/app/telegram"
-
-	//"photofinish/pkg/app/aws/recognition/rekognition"
-	s32 "photofinish/pkg/app/aws/s3"
-	"photofinish/pkg/app/dropbox"
-	"photofinish/pkg/app/picture"
-	"photofinish/pkg/common/infrarstructure/db"
-	"photofinish/pkg/common/util"
-	"photofinish/pkg/domain/pictures"
-	"photofinish/pkg/infrastructure/postgres"
+	//"github.com/col3name/images-search/pkg/app/aws/recognition/rekognition"
+	awsS3 "github.com/col3name/images-search/pkg/app/aws/s3"
+	"github.com/col3name/images-search/pkg/app/dropbox"
+	"github.com/col3name/images-search/pkg/app/picture"
+	"github.com/col3name/images-search/pkg/common/infrarstructure/db"
+	"github.com/col3name/images-search/pkg/common/util"
+	"github.com/col3name/images-search/pkg/domain/pictures"
+	"github.com/col3name/images-search/pkg/infrastructure/postgres"
 	"strconv"
 	"sync"
 	"time"
@@ -104,7 +103,7 @@ func main() {
 	}
 
 	downloader := dropbox.NewSDKDownloader(accessToken)
-	awsS3Uploader := s32.NewAwsS3Uploader(uploader, awsBucket)
+	awsS3Uploader := awsS3.NewAwsS3Uploader(uploader, awsBucket)
 
 	pictureRepo := postgres.NewPictureRepository(pool)
 	compressor := picture.NewImageCompressor()

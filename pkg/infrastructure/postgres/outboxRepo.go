@@ -1,10 +1,10 @@
 package postgres
 
 import (
+	"github.com/col3name/images-search/pkg/common/infrarstructure/db"
+	"github.com/col3name/images-search/pkg/domain/broker"
+	"github.com/col3name/images-search/pkg/domain/domainerror"
 	"github.com/jackc/pgx"
-	"photofinish/pkg/common/infrarstructure/db"
-	"photofinish/pkg/domain/broker"
-	"photofinish/pkg/domain/domainerror"
 )
 
 type OutboxRepoImpl struct {

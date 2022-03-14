@@ -1,7 +1,7 @@
 package tasks
 
 import (
-	"photofinish/pkg/domain/pictures"
+	"github.com/col3name/images-search/pkg/domain/pictures"
 	"time"
 )
 

@@ -1,11 +1,11 @@
 package tasks
 
 import (
+	"github.com/col3name/images-search/pkg/common/util"
+	"github.com/col3name/images-search/pkg/domain/domainerror"
+	"github.com/col3name/images-search/pkg/domain/dto"
+	"github.com/col3name/images-search/pkg/domain/tasks"
 	"github.com/pkg/errors"
-	"photofinish/pkg/common/util"
-	"photofinish/pkg/domain/domainerror"
-	"photofinish/pkg/domain/dto"
-	"photofinish/pkg/domain/tasks"
 )
 
 type ServiceImpl struct {

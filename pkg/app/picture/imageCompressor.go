@@ -2,12 +2,12 @@ package picture
 
 import (
 	"bytes"
+	"github.com/col3name/images-search/pkg/domain/pictures"
 	"github.com/nfnt/resize"
 	log "github.com/sirupsen/logrus"
 	"image"
 	"image/jpeg"
 	"image/png"
-	"photofinish/pkg/domain/pictures"
 )
 
 type ImageCompressor struct {

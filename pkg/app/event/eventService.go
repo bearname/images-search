@@ -1,9 +1,9 @@
 package event
 
 import (
+	"github.com/col3name/images-search/pkg/domain/dto"
+	"github.com/col3name/images-search/pkg/domain/event"
 	log "github.com/sirupsen/logrus"
-	"photofinish/pkg/domain/dto"
-	"photofinish/pkg/domain/event"
 )
 
 type ServiceImpl struct {

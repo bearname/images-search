@@ -1,12 +1,12 @@
 package transport
 
 import (
+	"github.com/col3name/images-search/pkg/common/util"
+	"github.com/col3name/images-search/pkg/domain/dto"
+	"github.com/col3name/images-search/pkg/domain/tasks"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"photofinish/pkg/common/util"
-	"photofinish/pkg/domain/dto"
-	"photofinish/pkg/domain/tasks"
 	"strconv"
 )
 

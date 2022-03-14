@@ -1,7 +1,7 @@
 package broker
 
 import (
-	"photofinish/pkg/common/util/uuid"
+	"github.com/col3name/images-search/pkg/common/util/uuid"
 	"time"
 )
 

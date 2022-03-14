@@ -1,8 +1,8 @@
 package postgres
 
 import (
+	"github.com/col3name/images-search/pkg/domain/user"
 	"github.com/jackc/pgx"
-	"photofinish/pkg/domain/user"
 )
 
 type UserRepository struct {

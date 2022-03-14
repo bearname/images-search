@@ -3,17 +3,17 @@ package transport
 import (
 	"encoding/json"
 	"errors"
+	"github.com/col3name/images-search/pkg/app/paySystem"
+	"github.com/col3name/images-search/pkg/common/util"
+	"github.com/col3name/images-search/pkg/domain/order"
+	"github.com/col3name/images-search/pkg/domain/user"
+	"github.com/col3name/images-search/pkg/infrastructure/yookassa"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"github.com/stripe/stripe-go"
 	"io/ioutil"
 	"net/http"
-	"photofinish/pkg/app/paySystem"
-	"photofinish/pkg/common/util"
-	"photofinish/pkg/domain/order"
-	"photofinish/pkg/domain/user"
-	"photofinish/pkg/infrastructure/yookassa"
 )
 
 type OrderController struct {

@@ -1,6 +1,6 @@
 package order
 
-import "photofinish/pkg/common/util/uuid"
+import "github.com/col3name/images-search/pkg/common/util/uuid"
 
 //type CreateOrderDTO struct {
 //
