@@ -58,15 +58,15 @@ jobs:
         run: ls && pwd && lscpu && free
 
       - name: build containers
-        run: docker build -f Dockerfile -t ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $BACK_IMAGE) .
+        run: docker build -f Dockerfile -t ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $BACK_IMAGE) . && docker image push ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $BACK_IMAGE):latest
       - name: build containers
         run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $BACK_IMAGE)
       - name: build containers imageProcessor
-        run: docker build -f Dockerfile-imageProcessor -t ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $IMG_PROCESSOR) . && docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $IMG_PROCESSOR)
+        run: docker build -f Dockerfile-imageProcessor -t ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $IMG_PROCESSOR) . && docker image push ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $IMG_PROCESSOR):latest
       - name: build containers liberatorBlockedWorker
-        run: docker build -f Dockerfile-liberatorBlockedWorker -t ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $LIBERATOR_BLOCKED_WORKER) . && docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $LIBERATOR_BLOCKED_WORKER)
+        run: docker build -f Dockerfile-liberatorBlockedWorker -t ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $LIBERATOR_BLOCKED_WORKER) . && docker image push ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $LIBERATOR_BLOCKED_WORKER):latest
       - name: build containers rawImageHandler
-        run: docker build -f Dockerfile-rawImageHandler -t ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $RAW_IMAGE_HANDLER) . &&docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $RAW_IMAGE_HANDLER)
+        run: docker build -f Dockerfile-rawImageHandler -t ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $RAW_IMAGE_HANDLER) . && docker image push ${{ secrets.DOCKER_HUB_USERNAME }}/$(echo $RAW_IMAGE_HANDLER):latest
 
       #      - name: Build and push Docker image
       #        run: docker push
