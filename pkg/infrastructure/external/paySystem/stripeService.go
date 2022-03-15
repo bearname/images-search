@@ -38,16 +38,13 @@ func (s *StripeService) OnHandleEvent(event interface{}, _ string) (*order.Updat
 	return updateOrderDTO, nil
 }
 
-func (s *StripeService) Buy(dto order.CreateOrderDTO) (*order.PayResultDTO, error) {
+func (s *StripeService) Buy(dto *order.CreateOrderDTO) (*order.PayResultDTO, error) {
 	stripe.Key = s.secretKey
-	// Attempt to make the charge.
-	// We are setting the charge response to _
-	// as we are not using it.
 	token := stripe.String("tok_visa")
 	params := stripe.ChargeParams{
 		Amount:       stripe.Int64(dto.TotalPrice),
 		Currency:     stripe.String(string(stripe.CurrencyUSD)),
-		Source:       &stripe.SourceParams{Token: token}, // this should come from clientside
+		Source:       &stripe.SourceParams{Token: token},
 		ReceiptEmail: stripe.String(dto.ReceiptEmail),
 	}
 	data, err := json.Marshal(dto)

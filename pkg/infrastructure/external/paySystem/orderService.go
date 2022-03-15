@@ -38,7 +38,7 @@ func (s *OrderService) OnHandle(paymentSystem order.PaymentSystem, event interfa
 func (s *OrderService) GetOrder(dto *order.GetOrderDTO) (*order.ReturnOrderDTO, error) {
 	return s.repo.GetOrder(dto)
 }
-func (s *OrderService) Buy(paymentSystem order.PaymentSystem, dto order.CreateOrderDTO) (string, error) {
+func (s *OrderService) Buy(paymentSystem order.PaymentSystem, dto *order.CreateOrderDTO) (string, error) {
 	totalPrice := int64(len(dto.Data) * 100)
 	dto.TotalPrice = totalPrice
 
@@ -46,7 +46,7 @@ func (s *OrderService) Buy(paymentSystem order.PaymentSystem, dto order.CreateOr
 	dto.OrderId = orderId
 	orderIdStr := orderId.String()
 
-	err := s.repo.Store(&dto)
+	err := s.repo.Store(dto)
 	if err != nil {
 		return "", err
 	}
@@ -68,7 +68,6 @@ func (s *OrderService) Buy(paymentSystem order.PaymentSystem, dto order.CreateOr
 	if err != nil {
 		return orderIdStr, err
 	}
-	//token := paySystem.String(createOrderDto.StripeToken.ID)
 
 	return orderIdStr, nil
 }

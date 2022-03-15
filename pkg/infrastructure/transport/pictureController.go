@@ -1,8 +1,9 @@
 package transport
 
 import (
-	"github.com/col3name/images-search/pkg/domain/dto"
+	"errors"
 	"github.com/col3name/images-search/pkg/domain/pictures"
+	"github.com/col3name/images-search/pkg/infrastructure/transport/util"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -21,37 +22,21 @@ func NewPictureController(service pictures.Service) *PictureController {
 }
 
 func (c *PictureController) DetectImageFromDropboxUrl() func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-		if (*r).Method == "OPTIONS" {
+		if (*req).Method == "OPTIONS" {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
-		query := r.URL.Query()
-		dropboxUrl := query.Get("path")
 
-		if len(dropboxUrl) == 0 {
-			log.Println("err")
-			http.Error(w, "Failed get url to dropbox zip file", http.StatusBadRequest)
-			return
-		}
-
-		eventIdValue := query.Get("eventId")
-		if len(eventIdValue) == 0 {
-			log.Println("Failed get eventId")
-			http.Error(w, "Failed get eventId", http.StatusBadRequest)
-			return
-		}
-
-		eventId, err := strconv.Atoi(eventIdValue)
+		dropboxUrl, eventId, err := c.decodeDetectImageFromDropboxUrlReq(req)
 		if err != nil {
-			log.Println(err)
-			http.Error(w, "Invalid event id", http.StatusBadRequest)
-			return
+			msg := err.Error()
+			log.Println(msg, err)
+			http.Error(w, msg, http.StatusBadRequest)
 		}
-
 		taskResp, err := c.service.DetectImageFromUrl(dropboxUrl, eventId)
 		if err != nil {
 			c.BaseController.WriteError(w, err, TranslateError(err))
@@ -66,121 +51,85 @@ func (c *PictureController) DetectImageFromDropboxUrl() func(http.ResponseWriter
 	}
 }
 
+func (c *PictureController) decodeDetectImageFromDropboxUrlReq(req *http.Request) (string, int, error) {
+	query := req.URL.Query()
+	dropboxUrl := query.Get("path")
+
+	if len(dropboxUrl) == 0 {
+		return "", 0, errors.New("failed get url to dropbox zip file")
+	}
+
+	eventIdValue := query.Get("eventId")
+	if len(eventIdValue) == 0 {
+		return "", 0, errors.New("failed get eventId")
+	}
+
+	eventId, err := strconv.Atoi(eventIdValue)
+	if err != nil {
+		return "", 0, errors.New("invalid event id")
+	}
+	return dropboxUrl, eventId, nil
+}
+
 func (c *PictureController) SearchPictures() func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-		if (*r).Method == "OPTIONS" {
+		if (*req).Method == "OPTIONS" {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
-
-		query := r.URL.Query()
-		participantNumberStr := query.Get("number")
-		participantNumber := pictures.ValueNotSet
-		var err error
-		if len(participantNumberStr) != 0 {
-			participantNumber, err = strconv.Atoi(participantNumberStr)
-			if err != nil {
-				log.Println(err)
-				http.Error(w, "Invalid 'number' query parameter. 'Number' must be number", http.StatusBadRequest)
-				return
-			}
+		searchDTO, err := c.decodeSearchPicturesReq(req)
+		if err != nil {
+			msg := err.Error()
+			log.Println(err, msg)
+			http.Error(w, msg, http.StatusBadRequest)
+			return
 		}
-
-		confidenceParameter := query.Get("confidence")
-		confidence := 85
-		if len(confidenceParameter) != 0 {
-			confidence, err = strconv.Atoi(confidenceParameter)
-			msg := "Invalid 'confidence' query parameter. 'confidence' must be in range [0, 100]"
-			if err != nil {
-				log.Println(err)
-				log.Println(msg)
-				http.Error(w, msg, http.StatusBadRequest)
-				return
-			}
-			if confidence < 0 || confidence > 100 {
-				log.Println(msg)
-				http.Error(w, msg, http.StatusBadRequest)
-				return
-			}
-		}
-		limitParameter := query.Get("limit")
-		limit := 20
-		if len(limitParameter) != 0 {
-			limit, err = strconv.Atoi(limitParameter)
-			msg := "Invalid 'limit' query parameter. 'limit' must be in range [0, 100]"
-			if err != nil {
-				log.Println(err)
-				log.Println(msg)
-				http.Error(w, msg, http.StatusBadRequest)
-				return
-			}
-			if limit < 0 || limit > 100 {
-				log.Println(msg)
-				http.Error(w, msg, http.StatusBadRequest)
-				return
-			}
-		}
-		offsetParameter := query.Get("offset")
-		offset := 0
-		if len(offsetParameter) != 0 {
-			offset, err = strconv.Atoi(offsetParameter)
-			msg := "Invalid 'offset' query parameter. 'offset' must be in range [0, 100]"
-			if err != nil {
-				log.Println(err)
-				log.Println(msg)
-				http.Error(w, msg, http.StatusBadRequest)
-				return
-			}
-			if offset < 0 {
-				log.Println(msg)
-				http.Error(w, msg, http.StatusBadRequest)
-				return
-			}
-		}
-
-		eventIdParameter := query.Get("eventId")
-		eventId := pictures.ValueNotSet
-		if len(eventIdParameter) != 0 {
-			eventId, err = strconv.Atoi(eventIdParameter)
-			msg := "Invalid 'eventId' query parameter. 'eventId' must be in range [0, 100]"
-			if err != nil {
-				log.Println(err)
-				log.Println(msg)
-				http.Error(w, msg, http.StatusBadRequest)
-				return
-			}
-			if eventId < 0 {
-				log.Println(msg)
-				http.Error(w, msg, http.StatusBadRequest)
-				return
-			}
-		}
-
-		searchDTO := pictures.NewSearchPictureDto(participantNumber, confidence, eventId, dto.Page{Limit: limit, Offset: offset})
-		searchDto, err := c.service.Search(&searchDTO)
+		result, err := c.service.Search(searchDTO)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "Failed found searchDto", http.StatusBadRequest)
 			return
 		}
-
-		if searchDto.Pictures == nil {
-			searchDto.Pictures = make([]pictures.SearchPictureItem, 0)
+		if result.Pictures == nil {
+			result.Pictures = make([]pictures.SearchPictureItem, 0)
 		}
-
-		c.WriteJsonResponse(w, searchDto)
+		c.WriteJsonResponse(w, result)
 	}
 }
 
+func (c *PictureController) decodeSearchPicturesReq(req *http.Request) (*pictures.SearchPictureDto, error) {
+	query := req.URL.Query()
+	participantNumber, err := util.GetQueryParameter(query, "number", pictures.ValueNotSet, "invalid 'number' query parameter. 'Number' must be number", func(val int) bool {
+		return val < 0 || val > 100
+	})
+
+	confidence, err := util.GetQueryParameter(query, "confidence", 85, "invalid 'confidence' query parameter. 'limit' must be in range [0, 100]", func(val int) bool {
+		return val < 0 || val > 100
+	})
+	if err != nil {
+		return nil, err
+	}
+	page, err := util.DecodePageReq(req)
+	if err != nil {
+		return nil, err
+	}
+	eventId, err := util.GetPositiveNum(query, "eventId", pictures.ValueNotSet, "invalid 'eventId' query parameter.")
+	if err != nil {
+		return nil, err
+	}
+	searchDTO := pictures.NewSearchPictureDto(participantNumber, confidence, eventId, *page)
+	return &searchDTO, nil
+}
+
 func (c *PictureController) GetDropboxFolders() func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-		if (*r).Method == "OPTIONS" {
+		if (*req).Method == "OPTIONS" {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
@@ -194,28 +143,28 @@ func (c *PictureController) GetDropboxFolders() func(http.ResponseWriter, *http.
 }
 
 func (c *PictureController) DeletePicture() func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, DELETE")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-		if (*r).Method == "OPTIONS" {
+		if (*req).Method == "OPTIONS" {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
-		vars := mux.Vars(r)
+		vars := mux.Vars(req)
 		idString := vars["id"]
 		var err error
 		if len(idString) == 0 {
 			log.Println(err)
-			http.Error(w, "Invalid 'number' query parameter. 'Number' must be number", http.StatusBadRequest)
+			http.Error(w, "invalid 'number' query parameter. 'Number' must be number", http.StatusBadRequest)
 			return
 		}
 
 		err = c.service.Delete(idString)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, "Failed found pictures", http.StatusBadRequest)
+			http.Error(w, "failed found pictures", http.StatusBadRequest)
 			return
 		}
 

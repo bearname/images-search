@@ -1,13 +1,12 @@
 package transport
 
 import (
-	"github.com/col3name/images-search/pkg/common/util"
-	"github.com/col3name/images-search/pkg/domain/dto"
 	"github.com/col3name/images-search/pkg/domain/tasks"
+	transpUtil "github.com/col3name/images-search/pkg/infrastructure/transport/util"
+
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"strconv"
 )
 
 type TasksController struct {
@@ -22,22 +21,18 @@ func NewTasksController(service tasks.Service) *TasksController {
 }
 
 func (c *TasksController) GetTaskStatistic() func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Authorization")
-		if (*r).Method == "OPTIONS" {
+		if (*req).Method == "OPTIONS" {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
-
-		vars := mux.Vars(r)
-		taskId := vars["id"]
-
-		if len(taskId) == 0 || !util.IsUUID(taskId) {
-			e := "Invalid 'id' query parameter. 'id' must be uuid"
-			log.Println(e)
-			http.Error(w, e, http.StatusBadRequest)
+		taskId, err := transpUtil.GetUUIDParam(mux.Vars(req))
+		if err != nil {
+			log.Println(err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -55,53 +50,22 @@ func (c *TasksController) GetTaskStatistic() func(http.ResponseWriter, *http.Req
 }
 
 func (c *TasksController) GetTaskList() func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Authorization")
-		if (*r).Method == "OPTIONS" {
+		if (*req).Method == "OPTIONS" {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
-
-		query := r.URL.Query()
-		limitParameter := query.Get("limit")
-		limit := 10
-		var err error
-		if len(limitParameter) != 0 {
-			limit, err = strconv.Atoi(limitParameter)
-			msg := "Invalid 'limit' query parameter. 'limit' must be in range [0, 100]"
-			if err != nil {
-				log.Println(err)
-				log.Println(msg)
-				http.Error(w, msg, http.StatusBadRequest)
-				return
-			}
-			if limit < 0 || limit > 40 {
-				log.Println(msg)
-				http.Error(w, msg, http.StatusBadRequest)
-				return
-			}
+		page, err := transpUtil.DecodePageReq(req)
+		if err != nil {
+			msg := err.Error()
+			log.Println(msg)
+			http.Error(w, msg, http.StatusBadRequest)
+			return
 		}
-		offsetParameter := query.Get("offset")
-		offset := 0
-		if len(offsetParameter) != 0 {
-			offset, err = strconv.Atoi(offsetParameter)
-			msg := "Invalid 'offset' query parameter. 'offset' must be in range [0, 100]"
-			if err != nil {
-				log.Println(err)
-				log.Println(msg)
-				http.Error(w, msg, http.StatusBadRequest)
-				return
-			}
-			if offset < 0 {
-				log.Println(msg)
-				http.Error(w, msg, http.StatusBadRequest)
-				return
-			}
-		}
-
-		tasksList, err := c.service.GetTasks(&dto.Page{Offset: offset, Limit: limit})
+		tasksList, err := c.service.GetTasks(page)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "Failed found pictures", http.StatusBadRequest)

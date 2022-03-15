@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/col3name/images-search/pkg/domain"
 	"github.com/col3name/images-search/pkg/domain/pictures"
-	"github.com/col3name/images-search/pkg/infrastructure/aws/recognition"
+	"github.com/col3name/images-search/pkg/infrastructure/external/aws/recognition"
 	"github.com/col3name/images-search/pkg/infrastructure/postgres"
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox/files"
 	log "github.com/sirupsen/logrus"

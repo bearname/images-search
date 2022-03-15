@@ -16,8 +16,8 @@ import (
 	"github.com/col3name/images-search/pkg/common/infrarstructure/db"
 	"github.com/col3name/images-search/pkg/common/infrarstructure/server"
 	"github.com/col3name/images-search/pkg/common/util"
-	"github.com/col3name/images-search/pkg/infrastructure/dropbox"
-	paySystem2 "github.com/col3name/images-search/pkg/infrastructure/paySystem"
+	"github.com/col3name/images-search/pkg/infrastructure/external/dropbox"
+	"github.com/col3name/images-search/pkg/infrastructure/external/paySystem"
 	"github.com/col3name/images-search/pkg/infrastructure/postgres"
 	"github.com/col3name/images-search/pkg/infrastructure/router"
 	"github.com/col3name/images-search/pkg/infrastructure/transport"
@@ -119,9 +119,9 @@ func initHandlers(connPool *pgx.ConnPool, amqpChannel *amqp.Channel, dropboxAcce
 	tasksController := transport.NewTasksController(tasksService)
 
 	orderRepo := postgres.NewOrderRepository(connPool)
-	stripeService := paySystem2.NewStripeService(stripeSecretKey)
-	payService := paySystem2.NewOrderService(orderRepo)
-	yookassaService, err := paySystem2.NewYookassaService(54401, "test_Fh8hUAVVBGUGbjmlzba6TB0iyUbos_lueTHE-axOwM0")
+	stripeService := paySystem.NewStripeService(stripeSecretKey)
+	payService := paySystem.NewOrderService(orderRepo)
+	yookassaService, err := paySystem.NewYookassaService(54401, "test_Fh8hUAVVBGUGbjmlzba6TB0iyUbos_lueTHE-axOwM0")
 	if err != nil {
 		log.Fatal(err)
 		return nil

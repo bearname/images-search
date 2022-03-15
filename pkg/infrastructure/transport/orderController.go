@@ -6,8 +6,9 @@ import (
 	"github.com/col3name/images-search/pkg/common/util"
 	"github.com/col3name/images-search/pkg/domain/order"
 	"github.com/col3name/images-search/pkg/domain/user"
-	paySystem2 "github.com/col3name/images-search/pkg/infrastructure/paySystem"
-	"github.com/col3name/images-search/pkg/infrastructure/yookassa"
+	"github.com/col3name/images-search/pkg/infrastructure/external/paySystem"
+	"github.com/col3name/images-search/pkg/infrastructure/external/yookassa"
+	transpUtil "github.com/col3name/images-search/pkg/infrastructure/transport/util"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -20,14 +21,14 @@ type OrderController struct {
 	BaseController
 	orderService    order.Service
 	userService     user.Service
-	stripeService   *paySystem2.StripeService
-	yookassaService *paySystem2.YookassaService
+	stripeService   *paySystem.StripeService
+	yookassaService *paySystem.YookassaService
 }
 
 func NewOrderController(userService user.Service,
 	service order.Service,
-	paySystem *paySystem2.StripeService,
-	yookassaService *paySystem2.YookassaService) *OrderController {
+	paySystem *paySystem.StripeService,
+	yookassaService *paySystem.YookassaService) *OrderController {
 	c := new(OrderController)
 	c.userService = userService
 	c.orderService = service
@@ -45,24 +46,11 @@ func (c *OrderController) Pay() func(w http.ResponseWriter, req *http.Request) {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
-		var createOrderDto order.CreateOrderDTO
-		all, err := ioutil.ReadAll(req.Body)
+		createOrderDto, paySystemReq, err := c.decodePayReq(req)
 		if err != nil {
-			log.Println(err.Error())
-			w.Write([]byte(err.Error()))
-			w.WriteHeader(http.StatusBadRequest)
-			return
+			log.Println(err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
-		err = json.Unmarshal(all, &createOrderDto)
-		if err != nil {
-			log.Println(err.Error())
-			w.Write([]byte(err.Error()))
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		query := req.URL.Query()
-		paySystemReq := query.Get("paySystem")
-
 		var respCode int
 		var orderID string
 		switch paySystemReq {
@@ -184,21 +172,10 @@ func (c *OrderController) GetOrder() http.HandlerFunc {
 			return
 		}
 
-		vars := mux.Vars(req)
-		orderId := vars["id"]
-
-		if len(orderId) == 0 || !util.IsUUID(orderId) {
-			msg := "Invalid 'id' query parameter. 'id' must be uuid"
-			log.Println(msg)
-			http.Error(w, msg, http.StatusBadRequest)
-			return
-		}
-
-		username, ok := context.Get(req, "username").(string)
-		if !ok {
-			context.Clear(req)
-			http.Error(w, "cannot check username", http.StatusBadRequest)
-			return
+		username, orderId, err := c.decodeGetOrderReq(req)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 		userDto, err := c.userService.Find(username)
 		if err != nil {
@@ -217,4 +194,32 @@ func (c *OrderController) GetOrder() http.HandlerFunc {
 		}
 		c.WriteJsonResponse(w, returnOrderDto)
 	}
+}
+
+func (c *OrderController) decodePayReq(req *http.Request) (*order.CreateOrderDTO, string, error) {
+	var createOrderDto order.CreateOrderDTO
+	all, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return nil, "", err
+	}
+	err = json.Unmarshal(all, &createOrderDto)
+	if err != nil {
+		return nil, "", err
+	}
+	query := req.URL.Query()
+	paySystemReq := query.Get("paySystem")
+	return &createOrderDto, paySystemReq, nil
+}
+
+func (c *OrderController) decodeGetOrderReq(req *http.Request) (string, string, error) {
+	username, ok := context.Get(req, "username").(string)
+	context.Clear(req)
+	if !ok {
+		return "", "", errors.New("cannot check username")
+	}
+	orderId, err := transpUtil.GetUUIDParam(mux.Vars(req))
+	if err != nil {
+		return "", "", err
+	}
+	return username, orderId, nil
 }

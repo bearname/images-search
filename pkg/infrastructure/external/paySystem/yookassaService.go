@@ -3,7 +3,7 @@ package paySystem
 import (
 	"errors"
 	"github.com/col3name/images-search/pkg/domain/order"
-	"github.com/col3name/images-search/pkg/infrastructure/yookassa"
+	yookassa2 "github.com/col3name/images-search/pkg/infrastructure/external/yookassa"
 	log "github.com/sirupsen/logrus"
 	"net"
 	"strings"
@@ -14,16 +14,16 @@ var ErrInvalidEvent = errors.New("invalid event")
 var ErrFailedHandle = errors.New("failed handle payment")
 
 type YookassaService struct {
-	sdk             *yookassa.SDK
+	sdk             *yookassa2.SDK
 	appUrl          string
-	successWebhook  yookassa.Webhook
-	canceledWebhook yookassa.Webhook
+	successWebhook  yookassa2.Webhook
+	canceledWebhook yookassa2.Webhook
 }
 
 func NewYookassaService(shopId int, apiKey string) (*YookassaService, error) {
 	s := new(YookassaService)
 	s.appUrl = "https://adb3-188-187-176-103.ngrok.io"
-	s.sdk = yookassa.NewYookassaSDK(shopId, apiKey, s.appUrl, "https://yookassa.ru")
+	s.sdk = yookassa2.NewYookassaSDK(shopId, apiKey, s.appUrl, "https://yookassa.ru")
 	err := s.initWebhook()
 	if err != nil {
 		return s, err
@@ -66,10 +66,10 @@ func (s *YookassaService) OnHandleEvent(event interface{}, remoteIp string) (*or
 	if !s.checkIP(remoteIp) {
 		return nil, ErrInvalidIP
 	}
-	var yookassaEvent yookassa.NotificationEvent
+	var yookassaEvent yookassa2.NotificationEvent
 	switch event.(type) {
-	case yookassa.NotificationEvent:
-		yookassaEvent = event.(yookassa.NotificationEvent)
+	case yookassa2.NotificationEvent:
+		yookassaEvent = event.(yookassa2.NotificationEvent)
 	default:
 		return nil, ErrInvalidEvent
 	}
@@ -82,13 +82,13 @@ func (s *YookassaService) OnHandleEvent(event interface{}, remoteIp string) (*or
 	return updateOrderDTO, nil
 }
 
-func (s *YookassaService) Buy(dto order.CreateOrderDTO) (*order.PayResultDTO, error) {
+func (s *YookassaService) Buy(dto *order.CreateOrderDTO) (*order.PayResultDTO, error) {
 	meta := map[string]string{}
 	meta["orderId"] = dto.OrderId.String()
 
-	paymentResp, err := s.sdk.Pay(&yookassa.CreatePaymentDTO{
+	paymentResp, err := s.sdk.Pay(&yookassa2.CreatePaymentDTO{
 		OrderId:   dto.OrderId.String(),
-		Currency:  yookassa.USD,
+		Currency:  yookassa2.USD,
 		Value:     dto.TotalPrice,
 		ReturnUrl: s.appUrl + "/api/v1/yookassa",
 	})
@@ -109,13 +109,13 @@ func (s *YookassaService) initWebhook() error {
 		return err
 	}
 	if len(list.Items) == 0 {
-		webhook, err := s.createWebhook(yookassa.PaymentSucceeded)
+		webhook, err := s.createWebhook(yookassa2.PaymentSucceeded)
 		if err != nil {
 			return err
 		}
 		s.successWebhook = *webhook
 
-		webhook, err = s.createWebhook(yookassa.PaymentCanceled)
+		webhook, err = s.createWebhook(yookassa2.PaymentCanceled)
 		if err != nil {
 			return err
 		}
@@ -124,7 +124,7 @@ func (s *YookassaService) initWebhook() error {
 
 	isFoundSucceed, isFoundCanceled := s.checkExistedWebhook(list)
 	if !isFoundSucceed {
-		webhook, err := s.createWebhook(yookassa.PaymentSucceeded)
+		webhook, err := s.createWebhook(yookassa2.PaymentSucceeded)
 		if err != nil {
 			return err
 		}
@@ -132,7 +132,7 @@ func (s *YookassaService) initWebhook() error {
 	}
 
 	if !isFoundCanceled {
-		webhook, err := s.createWebhook(yookassa.PaymentCanceled)
+		webhook, err := s.createWebhook(yookassa2.PaymentCanceled)
 		if err != nil {
 			return err
 		}
@@ -141,15 +141,15 @@ func (s *YookassaService) initWebhook() error {
 	return nil
 }
 
-func (s *YookassaService) checkExistedWebhook(list *yookassa.WebhookListResp) (bool, bool) {
+func (s *YookassaService) checkExistedWebhook(list *yookassa2.WebhookListResp) (bool, bool) {
 	isFoundSucceed := false
 	isFoundCanceled := false
 	for _, item := range list.Items {
 		if strings.Contains(item.URL, s.appUrl+"/api/v1/yookassa") {
 			switch item.Event {
-			case yookassa.PaymentCanceled:
+			case yookassa2.PaymentCanceled:
 				isFoundCanceled = true
-			case yookassa.PaymentSucceeded:
+			case yookassa2.PaymentSucceeded:
 				isFoundSucceed = true
 			}
 		}
@@ -160,8 +160,8 @@ func (s *YookassaService) checkExistedWebhook(list *yookassa.WebhookListResp) (b
 	return isFoundSucceed, isFoundCanceled
 }
 
-func (s *YookassaService) createWebhook(event yookassa.Event) (*yookassa.Webhook, error) {
-	webhook, err := s.sdk.CreateWebhook(&yookassa.BaseWebhook{
+func (s *YookassaService) createWebhook(event yookassa2.Event) (*yookassa2.Webhook, error) {
+	webhook, err := s.sdk.CreateWebhook(&yookassa2.BaseWebhook{
 		Event: event,
 		URL:   s.appUrl + "/api/v1/yookassa",
 	})
@@ -169,7 +169,7 @@ func (s *YookassaService) createWebhook(event yookassa.Event) (*yookassa.Webhook
 	return webhook, err
 }
 
-func (s *YookassaService) handlePayment(event yookassa.NotificationEvent) (*order.UpdateOrderStatusDTO, bool) {
+func (s *YookassaService) handlePayment(event yookassa2.NotificationEvent) (*order.UpdateOrderStatusDTO, bool) {
 	var updateOrderDTO order.UpdateOrderStatusDTO
 	metadata := event.Object.Metadata
 	orderId, ok := metadata["orderId"]
@@ -178,9 +178,9 @@ func (s *YookassaService) handlePayment(event yookassa.NotificationEvent) (*orde
 	}
 	updateOrderDTO.OrderId = orderId
 	switch event.Event {
-	case string(yookassa.PaymentSucceeded):
+	case string(yookassa2.PaymentSucceeded):
 		updateOrderDTO.Status = order.PaySuccess
-	case string(yookassa.PaymentCanceled):
+	case string(yookassa2.PaymentCanceled):
 		updateOrderDTO.Status = order.PayCanceled
 	default:
 		return nil, false

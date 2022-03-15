@@ -50,7 +50,7 @@ func (s *ServiceImpl) CreateUser() (auth.Token, error) {
 	return auth.Token{AccessToken: accessToken, RefreshToken: refreshToken}, nil
 }
 
-func (s *ServiceImpl) Login(userDto auth.Credentials) (auth.Token, error) {
+func (s *ServiceImpl) Login(userDto *auth.Credentials) (auth.Token, error) {
 	userFromDb, err := s.userRepo.FindByUserName(userDto.Username)
 	if (err == nil && userFromDb.Username != userDto.Username) || err != nil {
 		if err != nil {
@@ -105,7 +105,7 @@ func (s *ServiceImpl) ValidateToken(authorizationHeader string) (string, error) 
 	return username, nil
 }
 
-func (s *ServiceImpl) RefreshToken(refreshTokenDto auth.RefreshTokenDto) (auth.Token, error) {
+func (s *ServiceImpl) RefreshToken(refreshTokenDto *auth.RefreshTokenDto) (auth.Token, error) {
 	username := refreshTokenDto.Username
 	userFromDb, err := s.userRepo.FindByUserName(username)
 	if (err == nil && userFromDb.Username != username) || err != nil {
@@ -143,10 +143,6 @@ func (s *ServiceImpl) parsePayload(token *jwt.Token) (string, string, bool) {
 		if !ok {
 			return "unauthorized, username not exist", "", false
 		}
-		//userId, ok = claims["userId"].(string)
-		//if !ok {
-		//    return "unauthorized, userId not exist", "", false
-		//}
 
 		_, err := s.userRepo.FindByUserName(username)
 		if err != nil {

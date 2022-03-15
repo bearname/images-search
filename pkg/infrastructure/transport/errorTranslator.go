@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/col3name/images-search/pkg/domain/auth"
 	"github.com/col3name/images-search/pkg/domain/pictures"
-	"github.com/col3name/images-search/pkg/infrastructure/dropbox"
+	"github.com/col3name/images-search/pkg/infrastructure/external/dropbox"
 	"net/http"
 )
 

@@ -2,8 +2,9 @@ package transport
 
 import (
 	"encoding/json"
-	"github.com/col3name/images-search/pkg/domain/dto"
+	"errors"
 	"github.com/col3name/images-search/pkg/domain/event"
+	"github.com/col3name/images-search/pkg/infrastructure/transport/util"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -23,29 +24,21 @@ func NewEventController(service event.Service) *EventController {
 }
 
 func (c *EventController) CreateEvent() func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-		if (*r).Method == "OPTIONS" {
+		if (*req).Method == "OPTIONS" {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
-		all, err := ioutil.ReadAll(r.Body)
+		t, err := c.decodeCreateEventReq(req)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, "Invalid json body. ", http.StatusBadRequest)
-			return
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
-		var t event.CreateEventInputDto
-		err = json.Unmarshal(all, &t)
-		if err != nil {
-			log.Println(err)
-			http.Error(w, "Invalid json body. required field: name, location, date ", http.StatusBadRequest)
-			return
-		}
-		eventId, err := c.service.Create(&t)
+		eventId, err := c.service.Create(t)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "Failed create event", http.StatusBadRequest)
@@ -56,32 +49,34 @@ func (c *EventController) CreateEvent() func(http.ResponseWriter, *http.Request)
 	}
 }
 
+func (c *EventController) decodeCreateEventReq(req *http.Request) (*event.CreateEventInputDto, error) {
+	all, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return nil, errors.New("invalid json body. ")
+	}
+	var t event.CreateEventInputDto
+	err = json.Unmarshal(all, &t)
+	if err != nil {
+		return nil, errors.New("invalid json body. required field: name, location, date ")
+	}
+	return &t, nil
+}
+
 func (c *EventController) DeleteEvent() func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, DELETE")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-		if (*r).Method == "OPTIONS" {
+		if (*req).Method == "OPTIONS" {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
-		vars := mux.Vars(r)
-		idString := vars["id"]
-		var err error
-		if len(idString) == 0 {
-			log.Println(err)
-			http.Error(w, "Invalid 'id' query parameter. 'Number' must be number", http.StatusBadRequest)
-			return
-		}
-
-		eventId, err := strconv.Atoi(idString)
+		eventId, err := c.decodeDeleteEventReq(req)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, "Event id must be positive number", http.StatusBadRequest)
-			return
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
-
 		err = c.service.DeleteEvent(eventId)
 		if err != nil {
 			log.Println(err)
@@ -93,52 +88,37 @@ func (c *EventController) DeleteEvent() func(http.ResponseWriter, *http.Request)
 	}
 }
 
+func (c *EventController) decodeDeleteEventReq(req *http.Request) (int, error) {
+	vars := mux.Vars(req)
+	idString := vars["id"]
+	var err error
+	if len(idString) == 0 {
+		return 0, errors.New("invalid 'id' query parameter. 'Number' must be number")
+	}
+
+	eventId, err := strconv.Atoi(idString)
+	if err != nil {
+		return 0, errors.New("event id must be positive number")
+	}
+	return eventId, nil
+}
+
 func (c *EventController) List() func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Authorization")
-		if (*r).Method == "OPTIONS" {
+		if (*req).Method == "OPTIONS" {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
-		query := r.URL.Query()
-		limitParameter := query.Get("limit")
-		limit := 20
-		var err error
-		if len(limitParameter) != 0 {
-			limit, err = strconv.Atoi(limitParameter)
-			msg := "Invalid 'limit' query parameter. 'limit' must be in range [0, 100]"
-			if err != nil {
-				log.Println(err, msg)
-				http.Error(w, msg, http.StatusBadRequest)
-				return
-			}
-			if limit < 0 || limit > 100 {
-				log.Println(msg)
-				http.Error(w, msg, http.StatusBadRequest)
-				return
-			}
+		listReq, err := util.DecodePageReq(req)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
-		offsetParameter := query.Get("offset")
-		offset := 0
-		if len(offsetParameter) != 0 {
-			offset, err = strconv.Atoi(offsetParameter)
-			msg := "Invalid 'offset' query parameter. 'offset' must be in range [0, 100]"
-			if err != nil {
-				log.Println(err, msg)
-				http.Error(w, msg, http.StatusBadRequest)
-				return
-			}
-			if offset < 0 {
-				log.Println(msg)
-				http.Error(w, msg, http.StatusBadRequest)
-				return
-			}
-		}
-
-		events, err := c.service.Search(&dto.Page{Offset: offset, Limit: limit})
+		events, err := c.service.Search(listReq)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "Failed found pictures", http.StatusBadRequest)

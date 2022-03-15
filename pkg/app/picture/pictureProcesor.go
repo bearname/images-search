@@ -6,7 +6,7 @@ import (
 	"github.com/col3name/images-search/pkg/domain/broker"
 	"github.com/col3name/images-search/pkg/domain/pictures"
 	"github.com/col3name/images-search/pkg/domain/tasks"
-	"github.com/col3name/images-search/pkg/infrastructure/dropbox"
+	"github.com/col3name/images-search/pkg/infrastructure/external/dropbox"
 )
 
 type Processor interface {
